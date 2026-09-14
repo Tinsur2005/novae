@@ -2,14 +2,9 @@
   <el-container class="layout">
     <!-- 左侧菜单 -->
     <el-aside :width="isCollapse ? '64px' : '220px'" class="layout-aside">
-      <!-- LOGO -->
+      <!-- LOGO(图片自带文字,矩形展示) -->
       <div class="logo">
-        <el-avatar :size="36" src="" shape="square">
-          <img src="@/assets/logo.png" alt="logo"/>
-        </el-avatar>
-        <transition name="fade">
-          <span v-show="!isCollapse" class="logo-title">盲盒商城</span>
-        </transition>
+        <img src="@/assets/logo.png" alt="logo" class="logo-img"/>
       </div>
       <!-- 菜单 -->
       <el-menu
@@ -18,9 +13,9 @@
           :collapse="isCollapse"
           :collapse-transition="false"
           router
-          background-color="#001529"
-          text-color="rgba(255,255,255,0.68)"
-          active-text-color="#ffffff"
+          background-color="#ffffff"
+          text-color="#303133"
+          active-text-color="#409eff"
       >
         <el-menu-item index="/admin">
           <el-icon>
@@ -28,16 +23,19 @@
           </el-icon>
           <template #title>管理员管理</template>
         </el-menu-item>
-        <!-- 以下菜单为后续模块预留 -->
-        <el-menu-item index="/goods" disabled>
+        <el-menu-item index="/category">
+          <el-icon>
+            <Menu/>
+          </el-icon>
+          <template #title>分类管理</template>
+        </el-menu-item>
+        <el-menu-item index="/product">
           <el-icon>
             <Goods/>
           </el-icon>
-          <template #title>
-            盲盒管理
-            <el-tag size="small" type="info" effect="dark" class="menu-tag">开发中</el-tag>
-          </template>
+          <template #title>商品管理</template>
         </el-menu-item>
+        <!-- 以下菜单为后续模块预留 -->
         <el-menu-item index="/order" disabled>
           <el-icon>
             <Tickets/>
@@ -146,13 +144,13 @@ const adminStore = useAdminInfoStore()
 const isCollapse = ref(false)
 
 // 面包屑标题
-const titleMap = {'/admin': '管理员管理', '/goods': '盲盒管理', '/order': '订单管理', '/stat': '数据统计'}
+const titleMap = {'/admin': '管理员管理', '/category': '分类管理', '/product': '商品管理', '/order': '订单管理', '/stat': '数据统计'}
 const currentTitle = computed(() => titleMap[route.path] || '首页')
 
 // 加载当前登录管理员信息
 const loadAdminInfo = async () => {
   try {
-    const res = await request.get('/admins/adminInfo')
+    const res = await request.get('/admin/adminInfo')
     if (res.code === 1) {
       adminStore.setAdminInfo(res.data)
     } else {
@@ -223,7 +221,7 @@ const submitPassword = () => {
     if (!valid) return
     passwordLoading.value = true
     try {
-      const res = await request.put('/admins/resetPassword', {
+      const res = await request.put('/admin/resetPassword', {
         oldPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword
       })
@@ -251,7 +249,8 @@ const submitPassword = () => {
 }
 
 .layout-aside {
-  background-color: #001529;
+  background-color: #ffffff;
+  border-right: 1px solid #e6e6e6;
   transition: width 0.2s;
   overflow-x: hidden;
 }
@@ -260,16 +259,15 @@ const submitPassword = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   height: 60px;
   overflow: hidden;
 }
 
-.logo-title {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: bold;
-  white-space: nowrap;
+.logo-img {
+  height: 52px;
+  width: auto;
+  max-width: 92%;
+  object-fit: contain;
 }
 
 .layout-menu {
@@ -317,15 +315,5 @@ const submitPassword = () => {
 
 .layout-main {
   background-color: #f0f2f5;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

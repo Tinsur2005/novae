@@ -12,7 +12,9 @@
         <module>mall-common</module>
         <module>mall-admin</module>
         <module>mall-category</module>
+        <module>mall-api</module>
         <module>mall-gateway</module>
+        <module>mall-product</module>
     </modules>
 
     <!-- 指定父工程 -->
@@ -55,10 +57,12 @@
 
 
     <dependencies>
-        <dependency>
+        <!-- 注意:web依赖不能全局继承,否则网关模块(响应式)与Servlet冲突
+             mall-common / mall-admin 等需要的模块各自声明 -->
+        <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
+        </dependency>-->
         <!-- mybatis和spring boot整合的起步依赖 -->
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>

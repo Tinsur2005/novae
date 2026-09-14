@@ -55,7 +55,7 @@ const handleLogin = () => {
     if (!valid) return
     loading.value = true
     try {
-      const res = await request.post('/admins/login', form)
+      const res = await request.post('/admin/login', form)
       if (res.code === 1) {
         tokenStore.setToken(res.data)
         adminStore.removeAdminInfo()

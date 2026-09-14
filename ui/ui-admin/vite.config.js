@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': { //请求路径中包含了/api
-        target: 'http://localhost:8081', //要更换的源,也就是后台服务的源
+        target: 'http://localhost:9000', //要更换的源,也就是后台网关的源
         changeOrigin: true, //要不要更换源
         rewrite: (path) => path.replace(/^\/api/, '') //路径重写/api替换为’’
       }

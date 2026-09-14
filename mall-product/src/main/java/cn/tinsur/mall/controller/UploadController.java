@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/product")
 public class UploadController {
 
     //MultipartFile file 封装了上传的文件的所有信息
@@ -33,13 +33,5 @@ public class UploadController {
             throw new RuntimeException(e);
         }
         return Result.ok("上传成功", url);
-    }
-
-    public static void main(String[] args) {
-        String uuid = UUID.randomUUID().toString();
-        //037681d2-7d98-4739-9318-d89ba83cc6df
-        System.out.println(uuid);
-        //7c45616c1e8740d987c41e95f33b9abe
-        System.out.println(uuid.replace("-", ""));
     }
 }

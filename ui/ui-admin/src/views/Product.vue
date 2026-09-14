@@ -2,11 +2,18 @@
   <el-card shadow="never">
     <!-- 搜索栏 -->
     <el-form :inline="true" :model="searchForm" class="search-form">
-      <el-form-item label="用户名">
-        <el-input v-model="searchForm.name" placeholder="请输入用户名" clearable @keyup.enter="handleSearch"/>
+      <el-form-item label="名称">
+        <el-input v-model="searchForm.name" placeholder="请输入商品名称" clearable @keyup.enter="handleSearch"/>
       </el-form-item>
-      <el-form-item label="邮箱">
-        <el-input v-model="searchForm.email" placeholder="请输入邮箱" clearable @keyup.enter="handleSearch"/>
+      <el-form-item label="分类">
+        <el-cascader
+            v-model="searchForm.categoryId"
+            :options="categoryTree"
+            :props="categoryProps"
+            placeholder="请选择二级分类"
+            clearable
+            style="width: 200px"
+        />
       </el-form-item>
       <el-form-item label="创建时间">
         <el-date-picker
@@ -36,19 +43,28 @@
     <el-table :data="tableData" border stripe v-loading="loading" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="50" align="center"/>
       <el-table-column prop="id" label="ID" width="70" align="center"/>
-      <el-table-column label="头像" width="80" align="center">
+      <el-table-column label="主图" width="90" align="center">
         <template #default="{ row }">
-          <el-avatar :size="36" :src="row.avatar || ''">{{ (row.name || 'A').slice(0, 1).toUpperCase() }}</el-avatar>
+          <el-image
+              v-if="row.mainImage"
+              :src="row.mainImage"
+              :preview-src-list="[row.mainImage]"
+              preview-teleported
+              fit="cover"
+              style="width: 48px; height: 48px; border-radius: 4px"
+          />
+          <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column prop="name" label="用户名" min-width="120"/>
-      <el-table-column prop="email" label="邮箱" min-width="160" show-overflow-tooltip/>
-      <el-table-column prop="phone" label="手机号" width="130"/>
-      <el-table-column label="角色" width="100" align="center">
+      <el-table-column prop="name" label="商品名称" min-width="160" show-overflow-tooltip/>
+      <el-table-column prop="categoryName" label="所属分类" width="130" show-overflow-tooltip/>
+      <el-table-column label="类型" width="90" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.role === 0 ? 'primary' : 'info'">{{ row.role === 0 ? '管理员' : '普通用户' }}</el-tag>
+          <el-tag :type="row.type === 2 ? 'warning' : 'primary'">{{ row.type === 2 ? '盲盒' : '普通商品' }}</el-tag>
         </template>
       </el-table-column>
+      <el-table-column prop="price" label="价格(元)" width="100" align="center"/>
+      <el-table-column prop="stock" label="库存" width="80" align="center"/>
       <el-table-column label="状态" width="90" align="center">
         <template #default="{ row }">
           <el-switch
@@ -85,52 +101,56 @@
   </el-card>
 
   <!-- 新增 / 编辑弹窗 -->
-  <el-dialog v-model="dialogVisible" :title="form.id ? '编辑管理员' : '新增管理员'" width="520px" destroy-on-close>
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-      <el-form-item label="头像">
-        <el-upload
-            class="avatar-uploader"
-            action="/api/admin/upload"
-            name="file"
-            :headers="uploadHeaders"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            accept="image/*"
-        >
-          <el-avatar v-if="form.avatar" :size="72" :src="form.avatar"/>
-          <el-icon v-else class="avatar-uploader-icon">
-            <Plus/>
-          </el-icon>
-        </el-upload>
+  <el-dialog v-model="dialogVisible" :title="form.id ? '编辑商品' : '新增商品'" width="560px" destroy-on-close>
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+      <el-form-item label="商品名称" prop="name">
+        <el-input v-model="form.name" placeholder="请输入商品名称"/>
       </el-form-item>
-      <el-form-item label="用户名" prop="name">
-        <el-input v-model="form.name" placeholder="请输入用户名"/>
+      <el-form-item label="副标题" prop="subtitle">
+        <el-input v-model="form.subtitle" placeholder="请输入副标题"/>
       </el-form-item>
-      <el-form-item label="密码" prop="password">
-        <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            :placeholder="form.id ? '不修改密码请留空' : '请输入密码'"
+      <el-form-item label="分类" prop="categoryId">
+        <el-cascader
+            v-model="form.categoryId"
+            :options="categoryTree"
+            :props="categoryProps"
+            placeholder="请选择二级分类"
+            style="width: 100%"
         />
       </el-form-item>
-      <el-form-item label="邮箱" prop="email">
-        <el-input v-model="form.email" placeholder="请输入邮箱"/>
+      <el-form-item label="商品类型" prop="type">
+        <el-radio-group v-model="form.type">
+          <el-radio :value="1">普通商品</el-radio>
+          <el-radio :value="2">盲盒</el-radio>
+        </el-radio-group>
       </el-form-item>
-      <el-form-item label="手机号" prop="phone">
-        <el-input v-model="form.phone" placeholder="请输入手机号"/>
+      <el-form-item label="价格(元)" prop="price">
+        <el-input-number v-model="form.price" :min="0" :precision="2" :step="1"/>
       </el-form-item>
-      <el-form-item label="角色" prop="role">
-        <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%">
-          <el-option label="管理员" :value="0"/>
-          <el-option label="普通用户" :value="1"/>
-        </el-select>
+      <el-form-item label="库存" prop="stock">
+        <el-input-number v-model="form.stock" :min="0" :step="1" :precision="0"/>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-radio-group v-model="form.status">
-          <el-radio :value="1">正常</el-radio>
-          <el-radio :value="0">停用</el-radio>
+          <el-radio :value="1">在售</el-radio>
+          <el-radio :value="0">下架</el-radio>
         </el-radio-group>
+      </el-form-item>
+      <el-form-item label="主图" prop="mainImage">
+        <el-upload
+            class="main-image-uploader"
+            action="/api/product/upload"
+            name="file"
+            :headers="uploadHeaders"
+            :show-file-list="false"
+            :on-success="handleMainImageSuccess"
+            accept="image/*"
+        >
+          <el-image v-if="form.mainImage" :src="form.mainImage" fit="cover" class="main-image"/>
+          <el-icon v-else class="main-image-uploader-icon">
+            <Plus/>
+          </el-icon>
+        </el-upload>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -149,13 +169,45 @@ import {useTokenStore} from '@/store/token.js'
 
 const tokenStore = useTokenStore()
 
+// ---------------- 分类树（级联选择器） ----------------
+const categoryTree = ref([])
+const categoryProps = {
+  value: 'id',
+  label: 'name',
+  children: 'children',
+  //只选中最后一级（二级分类）的id
+  emitPath: false
+}
+
+const loadCategoryTree = async () => {
+  try {
+    const res = await request.get('/category/tree')
+    if (res.code === 1) {
+      //删除空的children，让二级分类成为级联选择器的叶子节点
+      const removeEmptyChildren = (categoryList) => {
+        categoryList.forEach(category => {
+          if (category.children && category.children.length > 0) {
+            removeEmptyChildren(category.children)
+          } else {
+            delete category.children
+          }
+        })
+      }
+      categoryTree.value = res.data || []
+      removeEmptyChildren(categoryTree.value)
+    }
+  } catch (e) {
+    /* 拦截器已统一提示 */
+  }
+}
+
 // ---------------- 列表查询 ----------------
 const loading = ref(false)
 const tableData = ref([])
 const selection = ref([])
 const searchForm = reactive({
   name: '',
-  email: '',
+  categoryId: null,
   dateRange: []
 })
 const page = reactive({
@@ -174,12 +226,12 @@ const loadData = async () => {
       limit: page.limit
     }
     if (searchForm.name) params.name = searchForm.name
-    if (searchForm.email) params.email = searchForm.email
+    if (searchForm.categoryId) params.categoryId = searchForm.categoryId
     if (searchForm.dateRange && searchForm.dateRange.length === 2) {
       params.beginCreateTime = searchForm.dateRange[0]
       params.endCreateTime = searchForm.dateRange[1]
     }
-    const res = await request.get('/admin', {params})
+    const res = await request.get('/product', {params})
     if (res.code === 1) {
       tableData.value = res.data.records || []
       page.total = Number(res.data.total) || 0
@@ -200,7 +252,7 @@ const handleSearch = () => {
 
 const handleReset = () => {
   searchForm.name = ''
-  searchForm.email = ''
+  searchForm.categoryId = null
   searchForm.dateRange = []
   handleSearch()
 }
@@ -217,8 +269,8 @@ const handleCurrentChange = () => {
 // ---------------- 状态开关 ----------------
 const beforeStatusChange = (row) => {
   return new Promise((resolve, reject) => {
-    const text = row.status === 1 ? '停用' : '启用'
-    ElMessageBox.confirm(`确定要${text}用户「${row.name}」吗？`, '提示', {
+    const text = row.status === 1 ? '下架' : '上架'
+    ElMessageBox.confirm(`确定要${text}商品「${row.name}」吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
@@ -228,7 +280,7 @@ const beforeStatusChange = (row) => {
 
 const handleStatusChange = async (row) => {
   try {
-    const res = await request.put(`/admin/${row.id}`, {status: row.status})
+    const res = await request.put(`/product/${row.id}/status/${row.status}`)
     if (res.code === 1) {
       ElMessage.success('状态修改成功')
     } else {
@@ -246,72 +298,71 @@ const submitLoading = ref(false)
 const formRef = ref()
 const form = reactive({
   id: null,
+  categoryId: null,
+  type: 1,
   name: '',
-  password: '',
-  avatar: '',
-  email: '',
-  phone: '',
-  role: 0,
-  status: 1
+  subtitle: '',
+  price: 0,
+  stock: 0,
+  status: 1,
+  mainImage: ''
 })
 const rules = {
-  name: [{required: true, message: '请输入用户名', trigger: 'blur'}],
-  password: [
-    {
-      validator: (rule, value, callback) => {
-        // 编辑时留空表示不修改密码
-        if (!form.id && !value) {
-          callback(new Error('请输入密码'))
-        } else if (value && (value.length < 6 || value.length > 20)) {
-          callback(new Error('密码长度为 6 - 20 位'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
-  ],
-  email: [{type: 'email', message: '邮箱格式不正确', trigger: 'blur'}],
-  phone: [{pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}],
-  role: [{required: true, message: '请选择角色', trigger: 'change'}]
+  name: [{required: true, message: '请输入商品名称', trigger: 'blur'}],
+  categoryId: [{required: true, message: '请选择分类', trigger: 'change'}],
+  type: [{required: true, message: '请选择商品类型', trigger: 'change'}],
+  price: [{required: true, message: '请输入价格', trigger: 'blur'}],
+  stock: [{required: true, message: '请输入库存', trigger: 'blur'}]
 }
 
 const uploadHeaders = computed(() => ({Authorization: tokenStore.token}))
 
-const handleAvatarSuccess = (res) => {
+const handleMainImageSuccess = (res) => {
   if (res.code === 1) {
-    form.avatar = res.data
+    form.mainImage = res.data
   } else {
-    ElMessage.error(res.msg || '头像上传失败')
+    ElMessage.error(res.msg || '图片上传失败')
   }
 }
 
 const handleAdd = () => {
   Object.assign(form, {
     id: null,
+    categoryId: null,
+    type: 1,
     name: '',
-    password: '',
-    avatar: '',
-    email: '',
-    phone: '',
-    role: 0,
-    status: 1
+    subtitle: '',
+    price: 0,
+    stock: 0,
+    status: 1,
+    mainImage: ''
   })
   dialogVisible.value = true
 }
 
-const handleEdit = (row) => {
-  Object.assign(form, {
-    id: row.id,
-    name: row.name,
-    password: '',
-    avatar: row.avatar || '',
-    email: row.email || '',
-    phone: row.phone || '',
-    role: row.role,
-    status: row.status
-  })
-  dialogVisible.value = true
+const handleEdit = async (row) => {
+  try {
+    const res = await request.get(`/product/${row.id}`)
+    if (res.code === 1) {
+      const product = res.data
+      Object.assign(form, {
+        id: product.id,
+        categoryId: product.categoryId,
+        type: product.type,
+        name: product.name,
+        subtitle: product.subtitle || '',
+        price: product.price,
+        stock: product.stock,
+        status: product.status,
+        mainImage: product.mainImage || ''
+      })
+      dialogVisible.value = true
+    } else {
+      ElMessage.error(res.msg || '查询商品失败')
+    }
+  } catch (e) {
+    /* 拦截器已统一提示 */
+  }
 }
 
 const handleSubmit = () => {
@@ -321,12 +372,9 @@ const handleSubmit = () => {
     try {
       let res
       if (form.id) {
-        // 编辑时密码留空则不提交密码字段
-        const data = {...form}
-        if (!data.password) delete data.password
-        res = await request.put(`/admin/${form.id}`, data)
+        res = await request.put(`/product/${form.id}`, form)
       } else {
-        res = await request.post('/admin', form)
+        res = await request.post('/product', form)
       }
       if (res.code === 1) {
         ElMessage.success(form.id ? '修改成功' : '新增成功')
@@ -345,13 +393,13 @@ const handleSubmit = () => {
 
 // ---------------- 删除 ----------------
 const handleDelete = (row) => {
-  ElMessageBox.confirm(`确定要删除用户「${row.name}」吗？`, '提示', {
+  ElMessageBox.confirm(`确定要删除商品「${row.name}」吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await request.delete(`/admin/${row.id}`)
+      const res = await request.delete(`/product/${row.id}`)
       if (res.code === 1) {
         ElMessage.success('删除成功')
         loadData()
@@ -370,14 +418,14 @@ const handleSelectionChange = (rows) => {
 }
 
 const handleDeleteBatch = () => {
-  ElMessageBox.confirm(`确定要删除选中的 ${selection.value.length} 个用户吗？`, '提示', {
+  ElMessageBox.confirm(`确定要删除选中的 ${selection.value.length} 个商品吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     try {
       const ids = selection.value.map((row) => row.id)
-      const res = await request.delete('/admin', {data: ids})
+      const res = await request.delete('/product', {data: ids})
       if (res.code === 1) {
         ElMessage.success('批量删除成功')
         loadData()
@@ -393,6 +441,7 @@ const handleDeleteBatch = () => {
 
 onMounted(() => {
   loadData()
+  loadCategoryTree()
 })
 </script>
 
@@ -410,29 +459,34 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
-.avatar-uploader {
+.main-image-uploader {
   display: flex;
   justify-content: center;
-  width: 72px;
-  height: 72px;
+  width: 120px;
+  height: 120px;
   border: 1px dashed var(--el-border-color);
-  border-radius: 50%;
+  border-radius: 6px;
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.2s;
 }
 
-.avatar-uploader:hover {
+.main-image-uploader:hover {
   border-color: var(--el-color-primary);
 }
 
-.avatar-uploader-icon {
-  width: 72px;
-  height: 72px;
+.main-image-uploader-icon {
+  width: 120px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
   color: #8c939d;
+}
+
+.main-image {
+  width: 120px;
+  height: 120px;
 }
 </style>
