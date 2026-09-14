@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -141,5 +143,24 @@ public class AdminController {
     public Result deleteBatch(@RequestBody Long[] ids) {
         adminService.removeByIds(java.util.Arrays.asList(ids));
         return Result.ok("批量删除成功");
+    }
+
+    /**
+     * 查询所有在用的头像图片（供定时任务清理OSS垃圾图片）
+     * GET /admin/selectAllImage
+     */
+    @GetMapping("/selectAllImage")
+    public Set<String> selectAllImage() {
+        Set<String> set = new HashSet<>();
+        for (Admin admin : adminService.list()) {
+            String avatar = admin.getAvatar();
+            //只统计阿里云OSS上的图片，并把URL转成OSS对象名
+            if (avatar != null && !avatar.isEmpty() && avatar.contains("aliyuncs.com")) {
+                //https://bucket.region.aliyuncs.com/avatar/xxx.png -> avatar/xxx.png
+                String objectName = avatar.substring(avatar.indexOf("//") + 2);
+                set.add(objectName.substring(objectName.indexOf("/") + 1));
+            }
+        }
+        return set;
     }
 }

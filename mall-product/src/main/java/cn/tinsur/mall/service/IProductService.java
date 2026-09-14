@@ -6,6 +6,8 @@ import cn.tinsur.mall.pojo.vo.ProductVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Set;
+
 /**
  * <p>
  *  服务类
@@ -23,4 +25,6 @@ public interface IProductService extends IService<Product> {
     void update(Product product);
 
     void deleteById(Long id);
+
+    Set<String> selectAllImage();
 }

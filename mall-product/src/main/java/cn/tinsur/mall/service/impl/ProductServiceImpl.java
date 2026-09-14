@@ -10,6 +10,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -34,6 +40,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private ProductMapper productMapper;
     @Autowired
     private CategoryClient categoryClient;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public IPage<ProductVO> list(ProductQuery productQuery) {
@@ -87,5 +95,41 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public boolean removeByIds(Collection<?> list) {
         return super.removeByIds(list);
+    }
+
+    //查询所有在用的图片(OSS对象名,可带目录前缀)，供定时任务清理OSS垃圾图片
+    @Override
+    public Set<String> selectAllImage() {
+        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("main_image", "sub_images");
+        List<Product> list = productMapper.selectList(queryWrapper);
+        Set<String> set = new HashSet<>();
+        for (Product product : list) {
+            //主图
+            collectOssKey(set, product.getMainImage());
+            //副图，sub_images存的是JSON数组字符串
+            if (!ObjectUtils.isEmpty(product.getSubImages())) {
+                try {
+                    List<String> urls = objectMapper.readValue(product.getSubImages(), new TypeReference<List<String>>() {
+                    });
+                    for (String url : urls) {
+                        collectOssKey(set, url);
+                    }
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return set;
+    }
+
+    //把图片URL转成OSS对象名，只统计阿里云OSS上的图片
+    private void collectOssKey(Set<String> set, String url) {
+        if (ObjectUtils.isEmpty(url) || !url.contains("aliyuncs.com")) {
+            return;
+        }
+        //https://bucket.region.aliyuncs.com/product/xxx.png -> product/xxx.png
+        String objectName = url.substring(url.indexOf("//") + 2);
+        set.add(objectName.substring(objectName.indexOf("/") + 1));
     }
 }

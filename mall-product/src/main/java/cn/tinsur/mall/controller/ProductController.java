@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * <p>
@@ -98,5 +99,14 @@ public class ProductController {
     public Result deleteAll(@RequestBody Long[] ids) {
         productService.removeByIds(Arrays.asList(ids));
         return Result.ok("批量删除成功");
+    }
+
+    /**
+     * 查询所有在用的图片（供定时任务清理OSS垃圾图片）
+     * GET /product/selectAllImage
+     */
+    @GetMapping("/selectAllImage")
+    public Set<String> selectAllImage() {
+        return productService.selectAllImage();
     }
 }

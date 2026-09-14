@@ -4,12 +4,18 @@ import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
+import com.aliyun.oss.model.ListObjectsRequest;
+import com.aliyun.oss.model.ObjectListing;
+import com.aliyun.oss.model.OSSObjectSummary;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 阿里云OSS文件上传工具
@@ -67,5 +73,77 @@ public class AliOSSUtil {
             }
         }
         return url;
+    }
+
+    /**
+     * 删除文件
+     * @param objectName OSS里的对象名（可带目录前缀），如 product/xxx.png
+     */
+    public void deleteFile(String objectName) {
+        // 创建OSSClient实例。
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        try {
+            // 删除文件或目录。如果要删除目录，目录必须为空。
+            ossClient.deleteObject(bucketName, objectName);
+        } catch (OSSException oe) {
+            System.out.println("Caught an OSSException, which means your request made it to OSS, "
+                    + "but was rejected with an error response for some reason.");
+            System.out.println("Error Message:" + oe.getErrorMessage());
+            System.out.println("Error Code:" + oe.getErrorCode());
+            System.out.println("Request ID:" + oe.getRequestId());
+            System.out.println("Host ID:" + oe.getHostId());
+        } catch (ClientException ce) {
+            System.out.println("Caught an ClientException, which means the client encountered "
+                    + "a serious internal problem while trying to communicate with OSS, "
+                    + "such as not being able to access the network.");
+            System.out.println("Error Message:" + ce.getMessage());
+        } finally {
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
+        }
+    }
+
+    /**
+     * 列举Bucket下所有文件的对象名（可带目录前缀），如 product/xxx.png
+     */
+    public Set<String> listFile() {
+        // 创建OSSClient实例
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        // 分页获取文件
+        String nextMarker = null;
+        ObjectListing objectListing;
+        Set<String> set = new HashSet<>();
+        try {
+            do {
+                ListObjectsRequest listObjectsRequest = new ListObjectsRequest(bucketName);
+                listObjectsRequest.setMarker(nextMarker);
+                objectListing = ossClient.listObjects(listObjectsRequest);
+                List<OSSObjectSummary> sums = objectListing.getObjectSummaries();
+                for (OSSObjectSummary s : sums) {
+                    System.out.println(s.getKey()); // 打印文件路径
+                    set.add(s.getKey());
+                }
+                nextMarker = objectListing.getNextMarker();
+            } while (objectListing.isTruncated());
+        } catch (OSSException oe) {
+            System.out.println("Caught an OSSException, which means your request made it to OSS, "
+                    + "but was rejected with an error response for some reason.");
+            System.out.println("Error Message:" + oe.getErrorMessage());
+            System.out.println("Error Code:" + oe.getErrorCode());
+            System.out.println("Request ID:" + oe.getRequestId());
+            System.out.println("Host ID:" + oe.getHostId());
+        } catch (ClientException ce) {
+            System.out.println("Caught an ClientException, which means the client encountered "
+                    + "a serious internal problem while trying to communicate with OSS, "
+                    + "such as not being able to access the network.");
+            System.out.println("Error Message:" + ce.getMessage());
+        } finally {
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
+        }
+
+        return set;
     }
 }
