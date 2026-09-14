@@ -17,4 +17,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IProductService extends IService<Product> {
 
     IPage<ProductVO> list(ProductQuery productQuery);
+
+    Product selectById(Long id);
+
+    void update(Product product);
+
+    void deleteById(Long id);
 }

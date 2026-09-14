@@ -8,9 +8,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -25,6 +29,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     @Autowired
     private CategoryMapper categoryMapper;
 
+    //先从Redis缓存中读取分类树，缓存中没有再查数据库并写入缓存
+    @Cacheable(value = "categoryTree", key = "'tree'")
     @Override
     public List<CategoryVO> selectCategoryTree() {
         System.out.println("CategoryServiceImpl.selectCategoryTree");
@@ -37,10 +43,31 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
             CategoryVO categoryVO = new CategoryVO();
             BeanUtils.copyProperties(category, categoryVO);
             return categoryVO;
-        }).toList();
+        }).collect(Collectors.toList());
 
         List<CategoryVO> categoryVOTree = buildTree(categoryVOList);
         return categoryVOTree;
+    }
+
+    //更新类操作要删除缓存
+    @CacheEvict(value = "categoryTree", key = "'tree'")
+    @Override
+    public void add(Category category) {
+        categoryMapper.insert(category);
+    }
+
+    //修改分类后删除缓存，下次查询时重新加载
+    @CacheEvict(value = "categoryTree", key = "'tree'")
+    @Override
+    public boolean updateById(Category category) {
+        return super.updateById(category);
+    }
+
+    //删除分类后删除缓存，下次查询时重新加载
+    @CacheEvict(value = "categoryTree", key = "'tree'")
+    @Override
+    public boolean removeById(Serializable id) {
+        return super.removeById(id);
     }
 
     /**
@@ -55,7 +82,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
                 .map(categoryVO -> {
                     categoryVO.setChildren(buildChildrenTree(categoryVO, categoryVOList)); // 构建children
                     return categoryVO;
-                }).toList();
+                }).collect(Collectors.toList());
         return categoryVOTree;
     }
 
@@ -71,6 +98,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
                 .map(categoryVO -> {// 构建孩子节点的 children
                     categoryVO.setChildren(buildChildrenTree(categoryVO, categoryVOList)); // 递归构建children
                     return categoryVO;
-                }).toList();
+                }).collect(Collectors.toList());
     }
 }

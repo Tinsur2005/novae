@@ -13,6 +13,16 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 #缓存1个小时,单位是毫秒
+      cache-null-values: true #是否缓存空值，防止缓存穿透
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #mybatis官方提供的控制台打印日志

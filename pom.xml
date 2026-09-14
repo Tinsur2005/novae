@@ -15,6 +15,7 @@
         <module>mall-api</module>
         <module>mall-gateway</module>
         <module>mall-product</module>
+        <module>mall-api/mall-service</module>
     </modules>
 
     <!-- 指定父工程 -->
