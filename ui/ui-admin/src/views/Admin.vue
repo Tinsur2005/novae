@@ -90,8 +90,9 @@
       <el-form-item label="头像">
         <el-upload
             class="avatar-uploader"
-            action="/api/admin/upload"
+            action="/api/service/upload"
             name="file"
+            :data="{folder: 'avatar'}"
             :headers="uploadHeaders"
             :show-file-list="false"
             :on-success="handleAvatarSuccess"

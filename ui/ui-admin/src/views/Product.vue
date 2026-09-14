@@ -139,8 +139,9 @@
       <el-form-item label="主图" prop="mainImage">
         <el-upload
             class="main-image-uploader"
-            action="/api/product/upload"
+            action="/api/service/upload"
             name="file"
+            :data="{folder: 'product'}"
             :headers="uploadHeaders"
             :show-file-list="false"
             :on-success="handleMainImageSuccess"

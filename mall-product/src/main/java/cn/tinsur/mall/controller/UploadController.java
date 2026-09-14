@@ -3,6 +3,7 @@ package cn.tinsur.mall.controller;
 
 import cn.tinsur.mall.util.AliOSSUtil;
 import cn.tinsur.mall.util.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/product")
 public class UploadController {
+
+    @Autowired
+    private AliOSSUtil aliOSSUtil;
 
     //MultipartFile file 封装了上传的文件的所有信息
     @PostMapping("/upload")
@@ -28,7 +32,7 @@ public class UploadController {
         String newFilename = uuid + extension;
         String url = "";
         try {
-            url = AliOSSUtil.uploadFile(newFilename, file.getInputStream());
+            url = aliOSSUtil.uploadFile(newFilename, file.getInputStream());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

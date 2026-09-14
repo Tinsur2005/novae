@@ -23,6 +23,13 @@ spring:
     redis:
       time-to-live: 3600000 #缓存1个小时,单位是毫秒
       cache-null-values: true #是否缓存空值，防止缓存穿透
+
+# 阿里云OSS配置：accessKey从环境变量读取
+oss:
+  endpoint: https://oss-cn-beijing.aliyuncs.com
+  access-key-id: ${OSS_ACCESS_KEY_ID}
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET}
+  bucket-name: novae-oss
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #mybatis官方提供的控制台打印日志

@@ -1,35 +1,39 @@
 package cn.tinsur.mall.controller;
 
-
 import cn.tinsur.mall.util.AliOSSUtil;
 import cn.tinsur.mall.util.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/service")
 public class UploadController {
 
     @Autowired
     private AliOSSUtil aliOSSUtil;
 
-    //MultipartFile file 封装了上传的文件的所有信息
+    /**
+     * 文件上传到阿里云OSS
+     * @param file 上传的文件
+     * @param folder OSS里的目录前缀，不同功能传不同值：头像传avatar，商品图传product
+     */
     @PostMapping("/upload")
-    public Result<String> upload(MultipartFile file) {
+    public Result<String> upload(MultipartFile file, @RequestParam(required = false, defaultValue = "") String folder) {
         //7c45616c1e8740d987c41e95f33b9abe
         String uuid = UUID.randomUUID().toString().replace("-", "");
         //a.png
         String filename = file.getOriginalFilename();
         System.out.println(filename);
         //.png
-        String extension = filename.substring(filename.lastIndexOf(".") );
-        //7c45616c1e8740d987c41e95f33b9abe.png
-        String newFilename = uuid + extension;
+        String extension = filename.substring(filename.lastIndexOf("."));
+        //avatar/7c45616c1e8740d987c41e95f33b9abe.png
+        String newFilename = (folder.isEmpty() ? "" : folder + "/") + uuid + extension;
         String url = "";
         try {
             url = aliOSSUtil.uploadFile(newFilename, file.getInputStream());
@@ -37,13 +41,5 @@ public class UploadController {
             throw new RuntimeException(e);
         }
         return Result.ok("上传成功", url);
-    }
-
-    public static void main(String[] args) {
-        String uuid = UUID.randomUUID().toString();
-        //037681d2-7d98-4739-9318-d89ba83cc6df
-        System.out.println(uuid);
-        //7c45616c1e8740d987c41e95f33b9abe
-        System.out.println(uuid.replace("-", ""));
     }
 }
