@@ -16,8 +16,14 @@
               show-password
               placeholder="请输入密码"
               :prefix-icon="'Lock'"
-              @keyup.enter="handleLogin"
           />
+        </el-form-item>
+        <el-form-item prop="captcha">
+          <div class="captcha-row">
+            <el-input v-model="form.captcha" placeholder="请输入验证码" :prefix-icon="'Key'"
+                      @keyup.enter="handleLogin"/>
+            <img class="captcha-img" :src="captchaSrc" alt="验证码" title="点击刷新" @click="refreshCaptcha">
+          </div>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="login-btn" :loading="loading" @click="handleLogin">登 录</el-button>
@@ -31,7 +37,8 @@
 import {reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
-import request from '@/utils/request'
+import adminApi from '@/api/admin/admin.js'
+import captchaApi from '@/api/service/captcha.js'
 import {useTokenStore} from '@/store/token.js'
 import {useAdminInfoStore} from '@/store/adminInfo.js'
 
@@ -43,19 +50,35 @@ const loading = ref(false)
 const formRef = ref()
 const form = reactive({
   name: '',
-  password: ''
+  password: '',
+  captcha: '',
+  uuid: ''
 })
 const rules = {
   name: [{required: true, message: '请输入用户名', trigger: 'blur'}],
-  password: [{required: true, message: '请输入密码', trigger: 'blur'}]
+  password: [{required: true, message: '请输入密码', trigger: 'blur'}],
+  captcha: [
+    {required: true, message: '请输入验证码', trigger: 'blur'},
+    {min: 4, max: 4, message: '验证码为4位字符', trigger: 'blur'}
+  ]
 }
+
+//验证码图片地址，加时间戳参数防止浏览器缓存，点击图片刷新
+const captchaSrc = ref('')
+const refreshCaptcha = () => {
+  captchaApi.captcha().then(result => {
+    captchaSrc.value = result.data.captcha
+    form.uuid = result.data.uuid
+  })
+}
+refreshCaptcha()
 
 const handleLogin = () => {
   formRef.value.validate(async (valid) => {
     if (!valid) return
     loading.value = true
     try {
-      const res = await request.post('/admin/login', form)
+      const res = await adminApi.login(form)
       if (res.code === 1) {
         tokenStore.setToken(res.data)
         adminStore.removeAdminInfo()
@@ -63,6 +86,8 @@ const handleLogin = () => {
         router.push('/')
       } else {
         ElMessage.error(res.msg || '登录失败')
+        //验证码是一次性的，登录失败后刷新图片重新获取
+        refreshCaptcha()
       }
     } catch (e) {
       /* 拦截器已统一提示 */
@@ -108,5 +133,19 @@ const handleLogin = () => {
 
 .login-btn {
   width: 100%;
+}
+
+/*验证码输入框和图片同一行显示*/
+.captcha-row {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+
+.captcha-img {
+  height: 40px;
+  width: 120px;
+  cursor: pointer;
+  border-radius: 4px;
 }
 </style>

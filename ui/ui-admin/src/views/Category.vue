@@ -58,7 +58,7 @@
 import {onMounted, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import dayjs from 'dayjs'
-import request from '@/utils/request'
+import categoryApi from '@/api/category/category.js'
 
 // ---------------- 树形列表 ----------------
 const loading = ref(false)
@@ -69,7 +69,7 @@ const formatTime = (time) => time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : 
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request.get('/category/tree')
+    const res = await categoryApi.tree()
     if (res.code === 1) {
       tableData.value = res.data || []
     } else {
@@ -142,9 +142,9 @@ const handleSubmit = () => {
     try {
       let res
       if (form.id) {
-        res = await request.put(`/category/${form.id}`, form)
+        res = await categoryApi.update(form.id, form)
       } else {
-        res = await request.post('/category', form)
+        res = await categoryApi.add(form)
       }
       if (res.code === 1) {
         ElMessage.success(form.id ? '修改成功' : '新增成功')
@@ -169,7 +169,7 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await request.delete(`/category/${row.id}`)
+      const res = await categoryApi.deleteById(row.id)
       if (res.code === 1) {
         ElMessage.success('删除成功')
         loadData()

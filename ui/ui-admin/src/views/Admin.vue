@@ -145,7 +145,7 @@
 import {computed, onMounted, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import dayjs from 'dayjs'
-import request from '@/utils/request'
+import adminApi from '@/api/admin/admin.js'
 import {useTokenStore} from '@/store/token.js'
 
 const tokenStore = useTokenStore()
@@ -180,7 +180,7 @@ const loadData = async () => {
       params.beginCreateTime = searchForm.dateRange[0]
       params.endCreateTime = searchForm.dateRange[1]
     }
-    const res = await request.get('/admin', {params})
+    const res = await adminApi.list(params)
     if (res.code === 1) {
       tableData.value = res.data.records || []
       page.total = Number(res.data.total) || 0
@@ -229,7 +229,7 @@ const beforeStatusChange = (row) => {
 
 const handleStatusChange = async (row) => {
   try {
-    const res = await request.put(`/admin/${row.id}`, {status: row.status})
+    const res = await adminApi.updateStatus(row.id, row.status)
     if (res.code === 1) {
       ElMessage.success('状态修改成功')
     } else {
@@ -325,9 +325,9 @@ const handleSubmit = () => {
         // 编辑时密码留空则不提交密码字段
         const data = {...form}
         if (!data.password) delete data.password
-        res = await request.put(`/admin/${form.id}`, data)
+        res = await adminApi.update(form.id, data)
       } else {
-        res = await request.post('/admin', form)
+        res = await adminApi.add(form)
       }
       if (res.code === 1) {
         ElMessage.success(form.id ? '修改成功' : '新增成功')
@@ -352,7 +352,7 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await request.delete(`/admin/${row.id}`)
+      const res = await adminApi.deleteById(row.id)
       if (res.code === 1) {
         ElMessage.success('删除成功')
         loadData()
@@ -378,7 +378,7 @@ const handleDeleteBatch = () => {
   }).then(async () => {
     try {
       const ids = selection.value.map((row) => row.id)
-      const res = await request.delete('/admin', {data: ids})
+      const res = await adminApi.deleteAll(ids)
       if (res.code === 1) {
         ElMessage.success('批量删除成功')
         loadData()

@@ -165,7 +165,8 @@
 import {computed, onMounted, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import dayjs from 'dayjs'
-import request from '@/utils/request'
+import productApi from '@/api/product/product.js'
+import categoryApi from '@/api/category/category.js'
 import {useTokenStore} from '@/store/token.js'
 
 const tokenStore = useTokenStore()
@@ -182,7 +183,7 @@ const categoryProps = {
 
 const loadCategoryTree = async () => {
   try {
-    const res = await request.get('/category/tree')
+    const res = await categoryApi.tree()
     if (res.code === 1) {
       //删除空的children，让二级分类成为级联选择器的叶子节点
       const removeEmptyChildren = (categoryList) => {
@@ -232,7 +233,7 @@ const loadData = async () => {
       params.beginCreateTime = searchForm.dateRange[0]
       params.endCreateTime = searchForm.dateRange[1]
     }
-    const res = await request.get('/product', {params})
+    const res = await productApi.list(params)
     if (res.code === 1) {
       tableData.value = res.data.records || []
       page.total = Number(res.data.total) || 0
@@ -281,7 +282,7 @@ const beforeStatusChange = (row) => {
 
 const handleStatusChange = async (row) => {
   try {
-    const res = await request.put(`/product/${row.id}/status/${row.status}`)
+    const res = await productApi.updateStatus(row.id, row.status)
     if (res.code === 1) {
       ElMessage.success('状态修改成功')
     } else {
@@ -343,7 +344,7 @@ const handleAdd = () => {
 
 const handleEdit = async (row) => {
   try {
-    const res = await request.get(`/product/${row.id}`)
+    const res = await productApi.selectById(row.id)
     if (res.code === 1) {
       const product = res.data
       Object.assign(form, {
@@ -373,9 +374,9 @@ const handleSubmit = () => {
     try {
       let res
       if (form.id) {
-        res = await request.put(`/product/${form.id}`, form)
+        res = await productApi.update(form.id, form)
       } else {
-        res = await request.post('/product', form)
+        res = await productApi.add(form)
       }
       if (res.code === 1) {
         ElMessage.success(form.id ? '修改成功' : '新增成功')
@@ -400,7 +401,7 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await request.delete(`/product/${row.id}`)
+      const res = await productApi.deleteById(row.id)
       if (res.code === 1) {
         ElMessage.success('删除成功')
         loadData()
@@ -426,7 +427,7 @@ const handleDeleteBatch = () => {
   }).then(async () => {
     try {
       const ids = selection.value.map((row) => row.id)
-      const res = await request.delete('/product', {data: ids})
+      const res = await productApi.deleteAll(ids)
       if (res.code === 1) {
         ElMessage.success('批量删除成功')
         loadData()

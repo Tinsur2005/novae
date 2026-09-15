@@ -132,7 +132,7 @@
 import {computed, reactive, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import request from '@/utils/request'
+import adminApi from '@/api/admin/admin.js'
 import {useTokenStore} from '@/store/token.js'
 import {useAdminInfoStore} from '@/store/adminInfo.js'
 
@@ -150,7 +150,7 @@ const currentTitle = computed(() => titleMap[route.path] || '首页')
 // 加载当前登录管理员信息
 const loadAdminInfo = async () => {
   try {
-    const res = await request.get('/admin/adminInfo')
+    const res = await adminApi.adminInfo()
     if (res.code === 1) {
       adminStore.setAdminInfo(res.data)
     } else {
@@ -221,7 +221,7 @@ const submitPassword = () => {
     if (!valid) return
     passwordLoading.value = true
     try {
-      const res = await request.put('/admin/resetPassword', {
+      const res = await adminApi.resetPassword({
         oldPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword
       })

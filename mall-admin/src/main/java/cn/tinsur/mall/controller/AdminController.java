@@ -4,12 +4,15 @@ import cn.tinsur.mall.util.JwtUtil;
 import cn.tinsur.mall.util.PasswordUtil;
 import cn.tinsur.mall.util.Result;
 import cn.tinsur.mall.pojo.dto.AdminPasswordDTO;
+import cn.tinsur.mall.pojo.dto.LoginInfoDTO;
 import cn.tinsur.mall.pojo.entity.Admin;
 import cn.tinsur.mall.pojo.query.AdminQuery;
 import cn.tinsur.mall.service.IAdminService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -30,6 +33,8 @@ import java.util.Set;
 public class AdminController {
     @Autowired
     private IAdminService adminService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @PutMapping("/resetPassword")
     public Result resetPassword(@RequestHeader("Authorization") String token,
@@ -60,16 +65,25 @@ public class AdminController {
     }
 
     @PostMapping("/login")
-    public Result<String> login(@RequestBody Admin admin) {
+    public Result<String> login(@RequestBody LoginInfoDTO loginInfoDTO) {
+        // 首先判断验证码是否正确
+        String captcha = (String) redisTemplate.opsForValue().get("captcha:" + loginInfoDTO.getUuid());
+        if (!StringUtils.hasText(captcha)) {
+            return Result.error("验证码已过期");
+        }
+        if (!captcha.equalsIgnoreCase(loginInfoDTO.getCaptcha())) {
+            return Result.error("验证码错误");
+        }
+
         // 根据用户名查找这个用户
-        Admin dbAdmin = adminService.getOne(new QueryWrapper<Admin>().eq("name", admin.getName()));
+        Admin dbAdmin = adminService.getOne(new QueryWrapper<Admin>().eq("name", loginInfoDTO.getName()));
         if (dbAdmin == null) {
             return Result.error("用户名不存在");
         }
-        /*if (!dbAdmin.getPassword().equalsIgnoreCase(admin.getPassword())) {
+        /*if (!dbAdmin.getPassword().equalsIgnoreCase(loginInfoDTO.getPassword())) {
             return Result.error("密码错误");
         }*/
-        if (!PasswordUtil.matches(admin.getPassword(), dbAdmin.getPassword())) {
+        if (!PasswordUtil.matches(loginInfoDTO.getPassword(), dbAdmin.getPassword())) {
             return Result.error("密码错误");
         }
         // 登录成功后，判断用户是否被禁用
