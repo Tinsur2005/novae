@@ -3,6 +3,7 @@ package cn.tinsur.mall.service.impl;
 import cn.tinsur.mall.api.category.CategoryClient;
 import cn.tinsur.mall.mapper.ProductMapper;
 import cn.tinsur.mall.pojo.entity.Product;
+import cn.tinsur.mall.util.LoginContext;
 import cn.tinsur.mall.pojo.query.ProductQuery;
 import cn.tinsur.mall.pojo.vo.ProductVO;
 import cn.tinsur.mall.service.IProductService;
@@ -20,6 +21,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -35,6 +37,7 @@ import java.util.Set;
  * @since 2026-09-09
  */
 @Service
+@Slf4j
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements IProductService {
     @Autowired
     private ProductMapper productMapper;
@@ -45,6 +48,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public IPage<ProductVO> list(ProductQuery productQuery) {
+        Long id = (Long) LoginContext.getLoginInfo().get("id");
+        log.info("ProductServiceImpl list id: {}", id);
+
         IPage<Product> page = new Page<>(productQuery.getPage(), productQuery.getLimit());
         LambdaQueryWrapper<Product> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.like(!ObjectUtils.isEmpty(productQuery.getName()), Product::getName, productQuery.getName())
