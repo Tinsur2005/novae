@@ -1,6 +1,7 @@
 package cn.tinsur.mall.controller;
 
 
+import cn.tinsur.mall.annotation.MyLog;
 import cn.tinsur.mall.pojo.entity.Category;
 import cn.tinsur.mall.pojo.vo.CategoryVO;
 import cn.tinsur.mall.service.ICategoryService;
@@ -59,6 +60,7 @@ public class CategoryController {
      * 新增分类
      * POST /category
      */
+    @MyLog(module = "分类模块：新增")
     @PostMapping
     public Result add(@RequestBody Category category) {
         categoryService.add(category);
@@ -69,6 +71,7 @@ public class CategoryController {
      * 修改分类
      * PUT /category/1
      */
+    @MyLog(module = "分类模块：修改")
     @PutMapping("/{id}")
     public Result update(@PathVariable Long id, @RequestBody Category category) {
         category.setId(id);
@@ -80,6 +83,7 @@ public class CategoryController {
      * 根据ID删除分类（逻辑删除）
      * DELETE /category/1
      */
+    @MyLog(module = "分类模块：删除")
     @DeleteMapping("/{id}")
     public Result deleteById(@PathVariable Long id) {
         categoryService.removeById(id);

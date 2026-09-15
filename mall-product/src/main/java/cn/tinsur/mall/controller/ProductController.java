@@ -1,6 +1,7 @@
 package cn.tinsur.mall.controller;
 
 
+import cn.tinsur.mall.annotation.MyLog;
 import cn.tinsur.mall.pojo.entity.Product;
 import cn.tinsur.mall.pojo.query.ProductQuery;
 import cn.tinsur.mall.pojo.vo.ProductVO;
@@ -31,6 +32,7 @@ public class ProductController {
      * 分页查询商品列表
      * GET /product?page=1&limit=10&name=xxx&categoryId=xxx
      */
+    @MyLog(module = "商品模块：查询")
     @GetMapping
     public Result<IPage<ProductVO>> list(ProductQuery productQuery) {
         IPage<ProductVO> page = productService.list(productQuery);
@@ -51,6 +53,7 @@ public class ProductController {
      * 新增商品
      * POST /product
      */
+    @MyLog(module = "商品模块：新增")
     @PostMapping
     public Result add(@RequestBody Product product) {
         productService.save(product);
@@ -61,6 +64,7 @@ public class ProductController {
      * 修改商品
      * PUT /product/1
      */
+    @MyLog(module = "商品模块：修改")
     @PutMapping("/{id}")
     public Result update(@PathVariable Long id, @RequestBody Product product) {
         product.setId(id);
@@ -72,6 +76,7 @@ public class ProductController {
      * 修改商品状态
      * PUT /product/1/status/0
      */
+    @MyLog(module = "商品模块：状态修改")
     @PutMapping("/{id}/status/{status}")
     public Result updateStatus(@PathVariable Long id, @PathVariable Integer status) {
         Product product = new Product();
@@ -85,6 +90,7 @@ public class ProductController {
      * 根据ID删除商品（逻辑删除）
      * DELETE /product/1
      */
+    @MyLog(module = "商品模块：删除")
     @DeleteMapping("/{id}")
     public Result deleteById(@PathVariable Long id) {
         productService.deleteById(id);
@@ -95,6 +101,7 @@ public class ProductController {
      * 批量删除商品
      * DELETE /product
      */
+    @MyLog(module = "商品模块：批量删除")
     @DeleteMapping
     public Result deleteAll(@RequestBody Long[] ids) {
         productService.removeByIds(Arrays.asList(ids));

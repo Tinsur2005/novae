@@ -1,5 +1,6 @@
 package cn.tinsur.mall.controller;
 
+import cn.tinsur.mall.annotation.MyLog;
 import cn.tinsur.mall.util.JwtUtil;
 import cn.tinsur.mall.util.PasswordUtil;
 import cn.tinsur.mall.util.Result;
@@ -36,6 +37,7 @@ public class AdminController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @MyLog(module = "管理员模块：修改密码")
     @PutMapping("/resetPassword")
     public Result resetPassword(@RequestHeader("Authorization") String token,
                                 @RequestBody AdminPasswordDTO adminPasswordDTO) {
@@ -64,6 +66,7 @@ public class AdminController {
         return Result.ok(admin);
     }
 
+    @MyLog(module = "登录")
     @PostMapping("/login")
     public Result<String> login(@RequestBody LoginInfoDTO loginInfoDTO) {
         // 首先判断验证码是否正确
@@ -103,6 +106,7 @@ public class AdminController {
      * 分页查询用户列表
      * GET /admins?page=1&limit=10&name=xxx&phone=xxx
      */
+    @MyLog(module = "管理员模块：查询")
     @GetMapping
     public Result<IPage<Admin>> list(AdminQuery adminQuery) {
         IPage<Admin> page = adminService.list(adminQuery);
@@ -122,6 +126,7 @@ public class AdminController {
      * 新增用户
      * POST /admins
      */
+    @MyLog(module = "管理员模块：新增")
     @PostMapping
     public Result add(@RequestBody Admin admin) {
         adminService.add(admin);
@@ -132,6 +137,7 @@ public class AdminController {
      * 修改用户
      * PUT /admins/1
      */
+    @MyLog(module = "管理员模块：修改")
     @PutMapping("/{id}")
     public Result update(@PathVariable Long id, @RequestBody Admin admin) {
         admin.setId(id);
@@ -143,6 +149,7 @@ public class AdminController {
      * 根据ID删除用户（逻辑删除）
      * DELETE /admins/1
      */
+    @MyLog(module = "管理员模块：删除")
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Long id) {
         adminService.removeById(id);
@@ -153,6 +160,7 @@ public class AdminController {
      * 批量删除用户
      * DELETE /admins
      */
+    @MyLog(module = "管理员模块：批量删除")
     @DeleteMapping
     public Result deleteBatch(@RequestBody Long[] ids) {
         adminService.removeByIds(java.util.Arrays.asList(ids));
