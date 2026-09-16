@@ -1,0 +1,60 @@
+/* ==================== 主题变量 ==================== */
+/* 盲盒潮玩风格：粉紫渐变主色，活泼梦幻 */
+:root {
+  /* 主题色：粉->紫渐变里的紫色锚点，vant组件的主色也用它 */
+  --app-primary: #a854f7;
+  /* 渐变里的粉色锚点，用于价格、点缀 */
+  --app-pink: #ff6ec4;
+  /* 品牌渐变：按钮、横幅、标题装饰统一用这一个渐变 */
+  --app-gradient: linear-gradient(135deg, #ff6ec4 0%, #a854f7 100%);
+  /* 浅紫浅粉的渐变背景，比纯灰底更有潮玩感 */
+  --app-gradient-light: linear-gradient(135deg, #fff0f9 0%, #f3e8ff 100%);
+  /* 页面背景色、卡片圆角 */
+  --app-bg: #faf7fd;
+  --app-card-radius: 12px;
+
+  /* 覆盖 vant 的主题变量，让组件库跟上盲盒配色 */
+  --van-primary-color: var(--app-primary);
+  --van-tabbar-item-active-color: var(--app-primary);
+  --van-nav-bar-title-font-size: 16px;
+  --van-cell-group-inset-radius: var(--app-card-radius);
+}
+
+/* ==================== 基础重置 ==================== */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #efe9f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC',
+      'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* 禁止长按选择文字，接近原生App的手感 */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+img {
+  display: block;
+}
+
+/* ==================== 应用容器 ==================== */
+/* 手机端应用宽度：在电脑浏览器打开时居中显示，模拟手机宽度 */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--app-bg);
+}
+
+/* vant 的弹窗/消息提示在小屏幕上不要超宽 */
+.van-dialog {
+  max-width: 88vw;
+}
+
+.van-toast {
+  max-width: 70vw;
+}

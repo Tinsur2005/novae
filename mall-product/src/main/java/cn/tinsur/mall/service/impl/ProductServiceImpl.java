@@ -55,6 +55,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         LambdaQueryWrapper<Product> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.like(!ObjectUtils.isEmpty(productQuery.getName()), Product::getName, productQuery.getName())
                 .like(!ObjectUtils.isEmpty(productQuery.getCategoryId()), Product::getCategoryId, productQuery.getCategoryId())
+                //前台查询传status=1，只查上架商品；管理端不传则查全部
+                .eq(!ObjectUtils.isEmpty(productQuery.getStatus()), Product::getStatus, productQuery.getStatus())
                 .between(!ObjectUtils.isEmpty(productQuery.getBeginCreateTime()) && !ObjectUtils.isEmpty(productQuery.getEndCreateTime()), Product::getCreateTime, productQuery.getBeginCreateTime(), productQuery.getEndCreateTime())
                 .orderByDesc(Product::getCreateTime);
         productMapper.selectPage(page, lambdaQueryWrapper);
