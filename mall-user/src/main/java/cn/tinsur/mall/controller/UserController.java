@@ -2,8 +2,10 @@ package cn.tinsur.mall.controller;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import cn.tinsur.mall.annotation.MyLog;
 import cn.tinsur.mall.pojo.entity.User;
+import cn.tinsur.mall.pojo.query.UserQuery;
 import cn.tinsur.mall.service.IUserService;
 import cn.tinsur.mall.util.JwtUtil;
 import cn.tinsur.mall.util.LoginContext;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,5 +77,52 @@ public class UserController {
         user.setId(id);
         userService.updateById(user);
         return Result.ok("更新成功");
+    }
+
+    /**
+     * 分页查询用户列表
+     * GET /user?page=1&limit=10&name=xxx&email=xxx&phone=xxx
+     */
+    @MyLog(module = "用户模块：查询")
+    @GetMapping
+    public Result<IPage<User>> list(UserQuery userQuery) {
+        IPage<User> page = userService.list(userQuery);
+        return Result.ok(page);
+    }
+
+    /**
+     * 修改用户状态（启用/禁用）
+     * PUT /user/1/status/0
+     */
+    @MyLog(module = "用户模块：状态修改")
+    @PutMapping("/{id}/status/{status}")
+    public Result updateStatus(@PathVariable Long id, @PathVariable Integer status) {
+        User user = new User();
+        user.setId(id);
+        user.setStatus(status);
+        userService.updateById(user);
+        return Result.ok("修改状态成功");
+    }
+
+    /**
+     * 根据ID删除用户（逻辑删除）
+     * DELETE /user/1
+     */
+    @MyLog(module = "用户模块：删除")
+    @DeleteMapping("/{id}")
+    public Result deleteById(@PathVariable Long id) {
+        userService.removeById(id);
+        return Result.ok("删除成功");
+    }
+
+    /**
+     * 批量删除用户
+     * DELETE /user
+     */
+    @MyLog(module = "用户模块：批量删除")
+    @DeleteMapping
+    public Result deleteBatch(@RequestBody Long[] ids) {
+        userService.removeByIds(Arrays.asList(ids));
+        return Result.ok("批量删除成功");
     }
 }

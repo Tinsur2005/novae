@@ -7,6 +7,7 @@ import Login from '@/views/Login.vue'
 import Admin from '@/views/Admin.vue'
 import Category from '@/views/Category.vue'
 import Product from '@/views/Product.vue'
+import User from '@/views/user/User.vue'
 
 
 
@@ -19,7 +20,8 @@ const router = createRouter({
             path: '/', component: Index, children: [
                 {path: '/admin', component: Admin},
                 {path: '/category', component: Category},
-                {path: '/product', component: Product}
+                {path: '/product', component: Product},
+                {path: '/user', component: User}
             ]
         }
     ]

@@ -35,6 +35,12 @@
           </el-icon>
           <template #title>商品管理</template>
         </el-menu-item>
+        <el-menu-item index="/user">
+          <el-icon>
+            <Avatar/>
+          </el-icon>
+          <template #title>用户管理</template>
+        </el-menu-item>
         <!-- 以下菜单为后续模块预留 -->
         <el-menu-item index="/order" disabled>
           <el-icon>
@@ -144,7 +150,7 @@ const adminStore = useAdminInfoStore()
 const isCollapse = ref(false)
 
 // 面包屑标题
-const titleMap = {'/admin': '管理员管理', '/category': '分类管理', '/product': '商品管理', '/order': '订单管理', '/stat': '数据统计'}
+const titleMap = {'/admin': '管理员管理', '/category': '分类管理', '/product': '商品管理', '/user': '用户管理', '/order': '订单管理', '/stat': '数据统计'}
 const currentTitle = computed(() => titleMap[route.path] || '首页')
 
 // 加载当前登录管理员信息

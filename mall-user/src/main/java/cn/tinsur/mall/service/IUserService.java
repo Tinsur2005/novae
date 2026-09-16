@@ -1,7 +1,9 @@
 package cn.tinsur.mall.service;
 
 import cn.tinsur.mall.pojo.entity.User;
+import cn.tinsur.mall.pojo.query.UserQuery;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 
 /**
  * <p>
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IUserService extends IService<User> {
 
+    IPage<User> list(UserQuery userQuery);
 }
