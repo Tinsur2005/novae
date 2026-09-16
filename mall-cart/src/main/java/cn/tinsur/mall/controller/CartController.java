@@ -35,4 +35,16 @@ public class CartController {
         return Result.ok("添加成功");
     }
 
+    @PutMapping
+    public Result update(@RequestBody Cart cart) {
+        cartService.update(cart);
+        return Result.ok("修改成功");
+    }
+
+    @DeleteMapping("/{id}")
+    public Result deleteById(@PathVariable Long id) {
+        cartService.deleteById(id);
+        return Result.ok("删除成功");
+    }
+
 }

@@ -22,7 +22,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         //不需要进行验证的路径
         if (path.startsWith("/service/captcha")
                 || path.startsWith("/admin/login")
-                || path.startsWith("/user/login")) {
+                || path.startsWith("/user/login")
+                || path.startsWith("/user/register")) {
             return chain.filter(exchange);
         }
 

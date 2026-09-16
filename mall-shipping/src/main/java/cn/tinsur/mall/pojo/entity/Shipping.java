@@ -71,6 +71,12 @@ public class Shipping implements Serializable {
     private String receiverAddress;
 
     /**
+     * 是否默认地址：0否 1是
+     */
+    @TableField("is_default")
+    private Integer isDefault;
+
+    /**
      * 创建时间
      */
     @TableField(value = "create_time", fill = FieldFill.INSERT)

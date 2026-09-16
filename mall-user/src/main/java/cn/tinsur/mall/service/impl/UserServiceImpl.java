@@ -1,10 +1,13 @@
 package cn.tinsur.mall.service.impl;
 
+import cn.tinsur.mall.exception.ServiceException;
 import cn.tinsur.mall.pojo.entity.User;
 import cn.tinsur.mall.mapper.UserMapper;
 import cn.tinsur.mall.pojo.query.UserQuery;
 import cn.tinsur.mall.service.IUserService;
+import cn.tinsur.mall.util.PasswordUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -36,5 +39,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .orderByDesc(User::getCreateTime);
 
         return userMapper.selectPage(page, lambdaQueryWrapper);
+    }
+
+    @Override
+    public void register(User user) {
+        // 用户名、密码必填
+        if (user.getName() == null || user.getName().isEmpty()
+                || user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new ServiceException("用户名和密码不能为空");
+        }
+        // 用户名查重，照抄管理员新增的写法
+        User userInDB = userMapper.selectOne(new QueryWrapper<User>().eq("name", user.getName()));
+        if (userInDB != null) {
+            throw new ServiceException("用户名已存在");
+        }
+        // 密码BCrypt加密后保存，新用户默认正常状态
+        user.setPassword(PasswordUtil.hash(user.getPassword()));
+        user.setStatus(1);
+        userMapper.insert(user);
     }
 }

@@ -1,7 +1,6 @@
 package cn.tinsur.mall.exception;
 
 import cn.tinsur.mall.util.Result;
-import com.aliyun.oss.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

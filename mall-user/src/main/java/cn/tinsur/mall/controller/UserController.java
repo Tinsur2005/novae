@@ -47,6 +47,13 @@ public class UserController {
         return Result.ok(user);
     }
 
+    @MyLog(module = "注册")
+    @PostMapping("/register")
+    public Result register(@RequestBody User user) {
+        userService.register(user);
+        return Result.ok("注册成功");
+    }
+
     @MyLog(module = "登录")
     @PostMapping("/login")
     public Result<String> login(@RequestBody User user) {

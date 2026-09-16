@@ -8,6 +8,7 @@ import cn.tinsur.mall.mapper.CartMapper;
 import cn.tinsur.mall.pojo.vo.CartVO;
 import cn.tinsur.mall.service.ICartService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import cn.tinsur.mall.exception.ServiceException;
 import cn.tinsur.mall.util.LoginContext;
 import cn.tinsur.mall.util.Result;
 import org.springframework.beans.BeanUtils;
@@ -68,5 +69,32 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         }).collect(Collectors.toList());
 
         return cartVOList;
+    }
+
+    @Override
+    public void update(Cart cart) {
+        Long userId = (Long) LoginContext.getLoginInfo().get("id");
+        Cart dbCart = cartMapper.selectById(cart.getId());
+        // 只能修改自己购物车里的商品
+        if (dbCart == null || !dbCart.getUserId().equals(userId)) {
+            throw new ServiceException("购物车项不存在");
+        }
+        // 只允许修改数量和勾选状态
+        Cart updateCart = new Cart();
+        updateCart.setId(cart.getId());
+        updateCart.setCount(cart.getCount());
+        updateCart.setSelected(cart.getSelected());
+        cartMapper.updateById(updateCart);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        Long userId = (Long) LoginContext.getLoginInfo().get("id");
+        Cart dbCart = cartMapper.selectById(id);
+        // 只能删除自己购物车里的商品
+        if (dbCart == null || !dbCart.getUserId().equals(userId)) {
+            throw new ServiceException("购物车项不存在");
+        }
+        cartMapper.deleteById(id);
     }
 }

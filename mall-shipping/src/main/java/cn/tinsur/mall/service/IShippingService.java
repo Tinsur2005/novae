@@ -16,4 +16,12 @@ import java.util.List;
 public interface IShippingService extends IService<Shipping> {
 
     List<Shipping> listUserShipping();
+
+    void add(Shipping shipping);
+
+    void update(Shipping shipping);
+
+    void setDefault(Long id);
+
+    void deleteById(Long id);
 }

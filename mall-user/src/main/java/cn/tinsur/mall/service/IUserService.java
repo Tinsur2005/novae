@@ -16,4 +16,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 public interface IUserService extends IService<User> {
 
     IPage<User> list(UserQuery userQuery);
+
+    void register(User user);
 }
