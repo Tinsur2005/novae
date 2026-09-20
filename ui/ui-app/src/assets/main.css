@@ -36,9 +36,9 @@
   font-weight: 600;
 }
 
-/* 品牌渐变按钮：盖掉vant按钮的纯色背景 */
-.gradient-button {
-  background: var(--app-gradient);
+/* 品牌主题按钮：盖掉vant按钮的默认颜色，统一用主题紫 */
+.brand-button {
+  background: var(--app-primary);
   border: none;
 }
 
@@ -52,14 +52,14 @@
   color: #303133;
 }
 
-/* 标题前的渐变装饰条 */
+/* 标题前的主题色装饰条 */
 .section-title::before {
   content: '';
   width: 4px;
   height: 16px;
   margin-right: 8px;
   border-radius: 2px;
-  background: var(--app-gradient);
+  background: var(--app-primary);
 }
 
 /* ==================== 页面留白 ==================== */

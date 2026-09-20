@@ -26,5 +26,9 @@ public interface IProductService extends IService<Product> {
 
     void deleteById(Long id);
 
+    void deductStock(Long id, Integer count);
+
+    void restoreStock(Long id, Integer count);
+
     Set<String> selectAllImage();
 }

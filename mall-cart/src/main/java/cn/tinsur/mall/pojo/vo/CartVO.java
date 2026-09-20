@@ -1,6 +1,6 @@
 package cn.tinsur.mall.pojo.vo;
 
-import cn.tinsur.mall.api.pojo.Product;
+import cn.tinsur.mall.api.pojo.entity.Product;
 import cn.tinsur.mall.pojo.entity.Cart;
 import lombok.Data;
 

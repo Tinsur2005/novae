@@ -87,7 +87,7 @@
       <span>退出登录</span>
     </div>
 
-    <p class="copyright">TinsurMall 盲盒商城 ©2026</p>
+    <p class="copyright">Novae星绽 ©2026</p>
   </div>
 </template>
 
@@ -99,7 +99,7 @@
     align-items: center;
     gap: 14px;
     padding: 30px 16px 26px;
-    background: var(--app-gradient);
+    background: var(--app-primary);
     border-radius: 0 0 20px 20px;
     overflow: hidden;
   }
@@ -180,7 +180,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--app-gradient-light);
+    background: var(--app-primary-light);
   }
 
   .menu-icon {

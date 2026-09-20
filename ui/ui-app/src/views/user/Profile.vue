@@ -95,7 +95,7 @@
         <van-field v-model="user.email" label="邮箱" placeholder="请输入邮箱" :rules="rules.email"/>
       </van-cell-group>
       <div class="save-button-wrap">
-        <van-button round block type="primary" class="gradient-button" native-type="submit">保存</van-button>
+        <van-button round block type="primary" class="brand-button" native-type="submit">保存</van-button>
       </div>
     </van-form>
   </div>
@@ -125,7 +125,7 @@
     align-items: center;
     justify-content: center;
     font-size: 30px;
-    background: var(--app-gradient-light);
+    background: var(--app-primary-light);
   }
 
   /* 右下角的相机角标 */
@@ -139,7 +139,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--app-gradient);
+    background: var(--app-primary);
     border: 2px solid #fff;
     box-sizing: content-box;
   }

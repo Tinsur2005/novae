@@ -70,7 +70,7 @@
                    left-icon="lock" type="password" :rules="rules.confirmPassword"/>
       </van-cell-group>
       <div class="register-button-wrap">
-        <van-button round block type="primary" class="gradient-button" native-type="submit">
+        <van-button round block type="primary" class="brand-button" native-type="submit">
           注 册
         </van-button>
       </div>
@@ -89,7 +89,7 @@
     align-items: center;
     padding-top: 80px;
     overflow: hidden;
-    background: var(--app-gradient-light);
+    background: var(--app-primary-light);
   }
 
   /* 漂浮的装饰泡泡，增加潮玩氛围 */
@@ -105,7 +105,7 @@
     height: 110px;
     top: -20px;
     left: -30px;
-    background: linear-gradient(135deg, rgba(255, 110, 196, 0.5), rgba(168, 84, 247, 0.4));
+    background: rgba(255, 110, 196, 0.4);
   }
 
   .bubble-2 {
@@ -113,14 +113,14 @@
     height: 64px;
     top: 170px;
     right: -14px;
-    background: linear-gradient(135deg, rgba(168, 84, 247, 0.35), rgba(255, 110, 196, 0.3));
+    background: rgba(168, 84, 247, 0.3);
   }
 
   .register-logo {
     width: 76px;
     height: 76px;
     border-radius: 24px;
-    background: var(--app-gradient);
+    background: var(--app-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -131,10 +131,7 @@
   .register-title {
     margin: 16px 0 4px;
     font-size: 22px;
-    background: var(--app-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--app-primary);
   }
 
   .register-subtitle {

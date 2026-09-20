@@ -94,7 +94,7 @@
         </div>
         <span class="bar-cart-text">购物车</span>
       </div>
-      <van-button class="bar-button gradient-button" round type="primary" :disabled="soldOut" @click="addCart">
+      <van-button class="bar-button brand-button" round type="primary" :disabled="soldOut" @click="addCart">
         {{ soldOut ? '已售罄' : '加入购物车' }}
       </van-button>
     </div>
@@ -224,7 +224,7 @@
     line-height: 16px;
     padding: 0 4px;
     box-sizing: border-box;
-    background: var(--app-gradient);
+    background: var(--app-primary);
     color: #fff;
     font-size: 10px;
     text-align: center;

@@ -18,196 +18,153 @@
     router.push({path: '/product', query: {name: keyword.value.trim()}})
   }
 
-  //首页轮播的盲盒宣传位
-  const banners = ref([
-    {text: '新品首发', title: '神秘新系列上线', desc: '每一盒都是未知的惊喜', icon: 'gift-o'},
-    {text: '热门推荐', title: '隐藏款等你来抽', desc: '手气王就是你', icon: 'star-o'},
-    {text: '限时活动', title: '入盒享优惠', desc: '潮玩好物限时特惠', icon: 'fire-o'}
-  ])
-
-  //分类宫格的渐变色和图标，按顺序循环使用
-  const catStyles = ref([
-    {background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', icon: 'gift-o'},
-    {background: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', icon: 'gem-o'},
-    {background: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)', icon: 'star-o'},
-    {background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', icon: 'fire-o'},
-    {background: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', icon: 'flower-o'},
-    {background: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', icon: 'medal-o'},
-    {background: 'linear-gradient(135deg, #ffd1ff 0%, #fad0c4 100%)', icon: 'smile-o'},
-    {background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', icon: 'music-o'}
-  ])
-
-  //一级分类宫格
-  const categoryList = ref([])
+  //分类标签行：推荐（不筛选）+ 全部二级分类，商品挂在二级分类上，筛选按二级分类id
+  const tabs = ref([{id: null, name: '推荐'}])
+  const activeTab = ref(0)
   categoryApi.tree().then(result => {
     if (result.code === 1) {
-      //tree接口返回的就是一级分类数组，children是二级分类
-      categoryList.value = result.data || []
+      const subList = (result.data || []).flatMap(category => category.children || [])
+      tabs.value = [...tabs.value, ...subList.map(sub => ({id: sub.id, name: sub.name}))]
     }
   })
 
-  //点击一级分类，跳到分类页并定位到该分类
-  const toCategory = (category) => {
-    router.push({path: '/category', query: {id: category.id}})
+  //商品瀑布流列表，van-list负责触底自动加载
+  const list = ref([])
+  const loading = ref(false)
+  const finished = ref(false)
+  const productQuery = ref({
+    page: 1,
+    limit: 10,
+    //只看上架商品
+    status: 1,
+    categoryId: null
+  })
+
+  const onLoad = () => {
+    productApi.list(productQuery.value).then(result => {
+      if (result.code === 1) {
+        list.value = [...list.value, ...(result.data.records || [])]
+        if (list.value.length >= result.data.total) {
+          finished.value = true
+        }
+      } else {
+        finished.value = true
+      }
+      loading.value = false
+    }).catch(() => {
+      loading.value = false
+      finished.value = true
+    })
+    //为下一次触底加载准备页码
+    productQuery.value.page++
   }
 
-  //新品推荐，取第一页上架商品（按创建时间倒序）
-  const productList = ref([])
-  productApi.list({page: 1, limit: 10, status: 1}).then(result => {
-    if (result.code === 1) {
-      productList.value = result.data.records || []
+  //切换分类标签，重置列表重新加载
+  const selectTab = (index) => {
+    if (activeTab.value === index) {
+      return
     }
-  })
+    activeTab.value = index
+    productQuery.value.categoryId = tabs.value[index].id
+    productQuery.value.page = 1
+    list.value = []
+    finished.value = false
+    loading.value = true
+    onLoad()
+  }
+
+  //进入首页先加载第一页
+  onLoad()
 </script>
 
 <template>
   <div class="home pb-tab">
-    <!-- 顶部渐变区：搜索栏 -->
+    <!-- 顶部：品牌 + 胶囊搜索框 -->
     <div class="home-top">
-      <div class="home-banner-title">TinsurMall 盲盒商城</div>
-      <van-search v-model="keyword" placeholder="搜索心仪的盲盒好物" shape="round"
-                  class="home-search" @search="onSearch"/>
-    </div>
-
-    <!-- 盲盒宣传轮播 -->
-    <van-swipe class="home-swipe" :autoplay="3000" indicator-color="#a854f7" round>
-      <van-swipe-item v-for="banner in banners" :key="banner.text" class="banner-item">
-        <van-icon class="banner-icon" :name="banner.icon" size="44" color="#fff"/>
-        <div class="banner-body">
-          <div class="banner-text">{{ banner.text }}</div>
-          <div class="banner-title">{{ banner.title }}</div>
-          <div class="banner-desc">{{ banner.desc }}</div>
-        </div>
-      </van-swipe-item>
-    </van-swipe>
-
-    <!-- 分类宫格 -->
-    <div class="section">
-      <div class="section-title">潮玩分类</div>
-      <div class="cat-grid">
-        <div v-for="(category, index) in categoryList" :key="category.id" class="cat-item"
-             @click="toCategory(category)">
-          <div class="cat-icon" :style="{background: catStyles[index % catStyles.length].background}">
-            <van-icon :name="catStyles[index % catStyles.length].icon" size="22" color="#fff"/>
-          </div>
-          <div class="cat-name ellipsis-1">{{ category.name }}</div>
-        </div>
+      <div class="brand">Novae星绽</div>
+      <div class="search-box">
+        <van-search v-model="keyword" placeholder="请输入您想找的内容" shape="round"
+                    background="transparent" @search="onSearch"/>
       </div>
     </div>
 
-    <!-- 新品推荐 -->
-    <div class="section">
-      <div class="section-title">新品推荐</div>
+    <!-- 分类标签行，可横向滑动 -->
+    <div class="tab-row">
+      <div v-for="(tab, index) in tabs" :key="index" class="tab-item"
+           :class="{active: index === activeTab}" @click="selectTab(index)">
+        {{ tab.name }}
+      </div>
+    </div>
+
+    <!-- 商品两列瀑布流 -->
+    <van-list v-model:loading="loading" :finished="finished" finished-text="— 没有更多了 —">
       <div class="product-grid">
-        <ProductCard v-for="product in productList" :key="product.id" :product="product"/>
+        <ProductCard v-for="product in list" :key="product.id" :product="product"/>
       </div>
-    </div>
+    </van-list>
   </div>
 </template>
 
 <style scoped>
-  /* 顶部渐变区 */
+  /* 顶部白色栏：品牌字 + 搜索框 */
   .home-top {
-    background: var(--app-gradient);
-    padding: 10px 0 14px;
-    border-radius: 0 0 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background-color: #fff;
   }
 
-  .home-banner-title {
-    padding: 2px 16px 6px;
+  .brand {
+    flex-shrink: 0;
     font-size: 17px;
     font-weight: 700;
-    color: #fff;
-    letter-spacing: 1px;
+    color: var(--app-primary);
+    letter-spacing: 0.5px;
   }
 
-  /* 搜索框白底半透明，融进渐变里 */
-  .home-search {
-    background: transparent;
-    padding: 0 12px;
+  .search-box {
+    flex: 1;
+    min-width: 0;
   }
 
-  :deep(.home-search .van-search__content) {
-    background-color: rgba(255, 255, 255, 0.9);
+  :deep(.search-box .van-search) {
+    padding: 0;
   }
 
-  /* 盲盒宣传轮播 */
-  .home-swipe {
-    margin: 10px 12px 0;
-    height: 120px;
+  :deep(.search-box .van-search__content) {
+    background-color: #f5f5f7;
   }
 
-  .banner-item {
+  /* 分类标签行 */
+  .tab-row {
     display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0 22px;
-    background: linear-gradient(135deg, #ffb6e0 0%, #c79bf7 100%);
-  }
-
-  .banner-icon {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-  }
-
-  .banner-body {
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  }
-
-  .banner-text {
-    display: inline-block;
-    padding: 1px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
-    font-size: 11px;
-  }
-
-  .banner-title {
-    margin-top: 5px;
-    font-size: 18px;
-    font-weight: 700;
-  }
-
-  .banner-desc {
-    margin-top: 3px;
-    font-size: 12px;
-    opacity: 0.9;
-  }
-
-  .section {
-    margin: 10px 12px 0;
-  }
-
-  /* 分类宫格 */
-  .cat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-  }
-
-  .cat-item {
+    padding: 10px 12px;
+    overflow-x: auto;
     background-color: #fff;
-    border-radius: var(--app-card-radius);
-    padding: 12px 4px 10px;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(168, 84, 247, 0.06);
+    border-radius: 0 0 16px 16px;
+    /*隐藏横向滚动条*/
+    scrollbar-width: none;
   }
 
-  .cat-icon {
-    width: 44px;
-    height: 44px;
-    margin: 0 auto 6px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
+  .tab-row::-webkit-scrollbar {
+    display: none;
   }
 
-  .cat-name {
+  .tab-item {
+    flex-shrink: 0;
+    padding: 5px 14px;
+    border-radius: 15px;
+    background-color: #f5f5f7;
+    color: #666;
     font-size: 13px;
+  }
+
+  .tab-item.active {
+    background-color: var(--app-primary);
+    color: #fff;
     font-weight: 600;
-    color: #303133;
   }
 
   /* 商品两列宫格 */
@@ -215,5 +172,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+    padding: 8px;
   }
 </style>

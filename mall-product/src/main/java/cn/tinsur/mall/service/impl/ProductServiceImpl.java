@@ -1,6 +1,7 @@
 package cn.tinsur.mall.service.impl;
 
 import cn.tinsur.mall.api.category.CategoryClient;
+import cn.tinsur.mall.exception.ServiceException;
 import cn.tinsur.mall.mapper.ProductMapper;
 import cn.tinsur.mall.pojo.entity.Product;
 import cn.tinsur.mall.util.LoginContext;
@@ -8,6 +9,7 @@ import cn.tinsur.mall.pojo.query.ProductQuery;
 import cn.tinsur.mall.pojo.vo.ProductVO;
 import cn.tinsur.mall.service.IProductService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -103,6 +105,31 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public boolean removeByIds(Collection<?> list) {
         return super.removeByIds(list);
+    }
+
+    //扣减库存后商品缓存里的库存就不准了，一并删除
+    @CacheEvict(value = "productCache", key = "#id")
+    @Override
+    public void deductStock(Long id, Integer count) {
+        LambdaUpdateWrapper<Product> updateWrapper = new LambdaUpdateWrapper<>();
+        //库存充足才会更新成功，避免并发下超卖
+        updateWrapper.eq(Product::getId, id)
+                .ge(Product::getStock, count)
+                .setSql("stock = stock - " + count);
+        int rows = productMapper.update(null, updateWrapper);
+        if (rows == 0) {
+            throw new ServiceException("库存不足");
+        }
+    }
+
+    //回补库存后同样删除商品缓存
+    @CacheEvict(value = "productCache", key = "#id")
+    @Override
+    public void restoreStock(Long id, Integer count) {
+        LambdaUpdateWrapper<Product> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Product::getId, id)
+                .setSql("stock = stock + " + count);
+        productMapper.update(null, updateWrapper);
     }
 
     //查询所有在用的图片(OSS对象名,可带目录前缀)，供定时任务清理OSS垃圾图片

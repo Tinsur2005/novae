@@ -128,7 +128,7 @@
 
     <!-- 空购物车 -->
     <van-empty v-if="!loading && list.length === 0" description="购物车还是空的" image="search">
-      <van-button round type="primary" class="gradient-button" @click="toHome">去逛逛</van-button>
+      <van-button round type="primary" class="brand-button" @click="toHome">去逛逛</van-button>
     </van-empty>
 
     <!-- 购物车列表 -->
@@ -172,7 +172,7 @@
         <span class="cart-bar-label">合计</span>
         <span class="price">{{ formatPrice(totalPrice) }}</span>
       </div>
-      <van-button class="cart-bar-button gradient-button" round type="primary" @click="toConfirm">
+      <van-button class="cart-bar-button brand-button" round type="primary" @click="toConfirm">
         去结算({{ selectedCount }})
       </van-button>
     </div>

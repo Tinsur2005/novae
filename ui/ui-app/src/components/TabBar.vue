@@ -36,7 +36,7 @@
     line-height: 1;
   }
 
-  /* 购物车角标用品牌渐变底色，配合盲盒主题 */
+  /* 购物车角标用主题色底色，配合盲盒主题 */
   .tab-badge {
     position: absolute;
     top: -5px;
@@ -46,7 +46,7 @@
     line-height: 16px;
     padding: 0 4px;
     box-sizing: border-box;
-    background: var(--app-gradient);
+    background: var(--app-primary);
     color: #fff;
     font-size: 10px;
     text-align: center;

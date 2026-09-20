@@ -62,7 +62,7 @@
     <div class="login-logo">
       <van-icon name="gift-o" color="#fff" size="38"/>
     </div>
-    <h1 class="login-title">TinsurMall</h1>
+    <h1 class="login-title">Novae星绽</h1>
     <p class="login-subtitle">开启属于你的惊喜时刻</p>
 
     <!-- 登录表单 -->
@@ -74,7 +74,7 @@
                    left-icon="lock" type="password" :rules="rules.password" @keyup.enter="login"/>
       </van-cell-group>
       <div class="login-button-wrap">
-        <van-button round block type="primary" class="gradient-button" native-type="submit">
+        <van-button round block type="primary" class="brand-button" native-type="submit">
           登 录
         </van-button>
       </div>
@@ -93,7 +93,7 @@
     align-items: center;
     padding-top: 90px;
     overflow: hidden;
-    background: var(--app-gradient-light);
+    background: var(--app-primary-light);
   }
 
   /* 漂浮的装饰泡泡，增加潮玩氛围 */
@@ -109,7 +109,7 @@
     height: 120px;
     top: -30px;
     right: -30px;
-    background: linear-gradient(135deg, rgba(255, 110, 196, 0.5), rgba(168, 84, 247, 0.4));
+    background: rgba(255, 110, 196, 0.4);
   }
 
   .bubble-2 {
@@ -117,7 +117,7 @@
     height: 70px;
     top: 150px;
     left: -20px;
-    background: linear-gradient(135deg, rgba(168, 84, 247, 0.35), rgba(255, 110, 196, 0.3));
+    background: rgba(168, 84, 247, 0.3);
   }
 
   .bubble-3 {
@@ -125,14 +125,14 @@
     height: 44px;
     top: 60px;
     left: 70px;
-    background: linear-gradient(135deg, rgba(255, 110, 196, 0.4), rgba(255, 200, 100, 0.3));
+    background: rgba(255, 190, 120, 0.35);
   }
 
   .login-logo {
     width: 76px;
     height: 76px;
     border-radius: 24px;
-    background: var(--app-gradient);
+    background: var(--app-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -144,10 +144,7 @@
     margin: 16px 0 4px;
     font-size: 24px;
     letter-spacing: 1px;
-    background: var(--app-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--app-primary);
   }
 
   .login-subtitle {

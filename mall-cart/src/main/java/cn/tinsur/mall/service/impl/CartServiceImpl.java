@@ -1,7 +1,7 @@
 package cn.tinsur.mall.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import cn.tinsur.mall.api.pojo.Product;
+import cn.tinsur.mall.api.pojo.entity.Product;
 import cn.tinsur.mall.api.product.ProductClient;
 import cn.tinsur.mall.pojo.entity.Cart;
 import cn.tinsur.mall.mapper.CartMapper;

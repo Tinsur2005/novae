@@ -109,6 +109,26 @@ public class ProductController {
     }
 
     /**
+     * 扣减商品库存，供订单服务下单时调用，库存不足会返回失败
+     * PUT /product/1/stock/deduct/2
+     */
+    @PutMapping("/{id}/stock/deduct/{count}")
+    public Result deductStock(@PathVariable Long id, @PathVariable Integer count) {
+        productService.deductStock(id, count);
+        return Result.ok("扣减成功");
+    }
+
+    /**
+     * 回补商品库存，供订单服务创建订单失败时补偿
+     * PUT /product/1/stock/restore/2
+     */
+    @PutMapping("/{id}/stock/restore/{count}")
+    public Result restoreStock(@PathVariable Long id, @PathVariable Integer count) {
+        productService.restoreStock(id, count);
+        return Result.ok("回补成功");
+    }
+
+    /**
      * 查询所有在用的图片（供定时任务清理OSS垃圾图片）
      * GET /product/selectAllImage
      */

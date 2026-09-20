@@ -153,7 +153,7 @@
     font-size: 16px;
     font-weight: 600;
     color: #fff;
-    background: var(--app-gradient);
+    background: var(--app-primary);
   }
 
   .cat-body {
@@ -184,7 +184,7 @@
     font-weight: 600;
   }
 
-  /*选中项左侧的渐变指示条*/
+  /*选中项左侧的主题色指示条*/
   .cat-left-item.active::before {
     content: '';
     position: absolute;
@@ -194,7 +194,7 @@
     width: 3px;
     height: 16px;
     border-radius: 2px;
-    background: var(--app-gradient);
+    background: var(--app-primary);
   }
 
   .cat-right {

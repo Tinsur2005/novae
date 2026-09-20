@@ -41,16 +41,13 @@
           </el-icon>
           <template #title>用户管理</template>
         </el-menu-item>
-        <!-- 以下菜单为后续模块预留 -->
-        <el-menu-item index="/order" disabled>
+        <el-menu-item index="/order">
           <el-icon>
             <Tickets/>
           </el-icon>
-          <template #title>
-            订单管理
-            <el-tag size="small" type="info" effect="dark" class="menu-tag">开发中</el-tag>
-          </template>
+          <template #title>订单管理</template>
         </el-menu-item>
+        <!-- 以下菜单为后续模块预留 -->
         <el-menu-item index="/stat" disabled>
           <el-icon>
             <DataAnalysis/>

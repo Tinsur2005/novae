@@ -125,8 +125,8 @@
     <div v-if="loading" class="list-loading">加载中...</div>
 
     <!-- 空状态 -->
-    <van-empty v-if="!loading && list.length === 0" description="暂无收货地址" image="location">
-      <van-button round type="primary" class="gradient-button" @click="showAdd">新增地址</van-button>
+    <van-empty v-if="!loading && list.length === 0" description="暂无收货地址">
+      <van-button round type="primary" class="brand-button" @click="showAdd">新增地址</van-button>
     </van-empty>
 
     <!-- 地址列表 -->
@@ -135,7 +135,7 @@
         <div class="shipping-row">
           <span class="shipping-name">{{ shipping.receiverName }}</span>
           <span class="shipping-mobile">{{ shipping.receiverMobile }}</span>
-          <van-tag v-if="shipping.isDefault === 1" round color="linear-gradient(135deg, #ff6ec4, #a854f7)">
+          <van-tag v-if="shipping.isDefault === 1" round color="#a854f7">
             默认
           </van-tag>
         </div>
@@ -173,7 +173,7 @@
         </van-cell-group>
         <div class="popup-buttons">
           <van-button block round @click="dialogVisible = false">取消</van-button>
-          <van-button block round type="primary" class="gradient-button" native-type="submit">保存</van-button>
+          <van-button block round type="primary" class="brand-button" native-type="submit">保存</van-button>
         </div>
       </van-form>
     </van-popup>

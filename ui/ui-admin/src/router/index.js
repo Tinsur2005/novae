@@ -8,6 +8,7 @@ import Admin from '@/views/Admin.vue'
 import Category from '@/views/Category.vue'
 import Product from '@/views/Product.vue'
 import User from '@/views/user/User.vue'
+import Order from '@/views/order/Order.vue'
 
 
 
@@ -21,7 +22,8 @@ const router = createRouter({
                 {path: '/admin', component: Admin},
                 {path: '/category', component: Category},
                 {path: '/product', component: Product},
-                {path: '/user', component: User}
+                {path: '/user', component: User},
+                {path: '/order', component: Order}
             ]
         }
     ]

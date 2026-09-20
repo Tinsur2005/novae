@@ -1,4 +1,4 @@
-package cn.tinsur.mall.api.pojo;
+package cn.tinsur.mall.api.pojo.entity;
 
 import lombok.Data;
 
