@@ -29,4 +29,6 @@ public interface IOrderService extends IService<Order> {
     void close(Long orderNo);
 
     void deleteById(Long orderNo);
+
+    void cancelOrder(Long orderNo);
 }

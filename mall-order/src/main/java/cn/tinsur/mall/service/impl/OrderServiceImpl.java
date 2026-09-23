@@ -4,6 +4,7 @@ import cn.tinsur.mall.api.cart.CartClient;
 import cn.tinsur.mall.api.pojo.entity.Product;
 import cn.tinsur.mall.api.pojo.vo.CartVO;
 import cn.tinsur.mall.api.product.ProductClient;
+import cn.tinsur.mall.constant.MqConstant;
 import cn.tinsur.mall.enums.OrderStatus;
 import cn.tinsur.mall.exception.ServiceException;
 import cn.tinsur.mall.pojo.entity.Order;
@@ -14,11 +15,17 @@ import cn.tinsur.mall.pojo.query.OrderQuery;
 import cn.tinsur.mall.pojo.vo.OrderVO;
 import cn.tinsur.mall.service.IOrderService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import cn.tinsur.mall.util.LoginContext;
+import cn.tinsur.mall.util.MultiDelayMessage;
 import cn.tinsur.mall.util.Result;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,6 +57,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private CartClient cartClient;
     @Autowired
     private ProductClient productClient;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
@@ -114,6 +123,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         //清除购物车已经下单的商品
         selectedCartVOList.forEach(cartVO -> cartClient.deletedById(cartVO.getId()));
+
+        //发送延时消息：1分钟 + 5分钟 + 10分钟 + 14分钟，合计30分钟后取消订单
+        MultiDelayMessage<Long> multiDelayMessage = new MultiDelayMessage<>(order.getOrderNo(), 60000L, 300000L, 600000L, 840000L);
+        Long delay = multiDelayMessage.removeNextDelay();
+        rabbitTemplate.convertAndSend(MqConstant.DELAY_EXCHANGE, MqConstant.DELAY_ORDER_ROUTING_KEY, multiDelayMessage, new MessagePostProcessor() {
+            @Override
+            public Message postProcessMessage(Message message) throws AmqpException {
+                message.getMessageProperties().setDelay(Math.toIntExact(delay));
+                return message;
+            }
+        });
     }
 
     /**
@@ -205,6 +225,27 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setStatus(OrderStatus.CLOSED.getCode());
         order.setCloseTime(new Date());
         orderMapper.updateById(order);
+
+        //按订单明细把商品库存加回去
+        LambdaQueryWrapper<OrderItem> itemQueryWrapper = new LambdaQueryWrapper<>();
+        itemQueryWrapper.eq(OrderItem::getOrderNo, orderNo);
+        List<OrderItem> orderItemList = orderItemMapper.selectList(itemQueryWrapper);
+        for (OrderItem orderItem : orderItemList) {
+            Result restoreResult = productClient.restoreStock(orderItem.getProductId(), orderItem.getQuantity());
+            if (restoreResult.getCode() == Result.ERROR) {
+                throw new ServiceException(restoreResult.getMsg());
+            }
+        }
+    }
+
+    //取消订单：超时未付款自动取消，下单时扣的库存要加回去
+    @Override
+    public void cancelOrder(Long orderNo) {
+        UpdateWrapper<Order> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("order_no", orderNo);
+        updateWrapper.set("status", OrderStatus.CANCELLED.getCode());
+        updateWrapper.set("close_time", new Date());
+        orderMapper.update(updateWrapper);
 
         //按订单明细把商品库存加回去
         LambdaQueryWrapper<OrderItem> itemQueryWrapper = new LambdaQueryWrapper<>();
