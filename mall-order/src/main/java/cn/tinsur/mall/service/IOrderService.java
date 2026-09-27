@@ -31,4 +31,6 @@ public interface IOrderService extends IService<Order> {
     void deleteById(Long orderNo);
 
     void cancelOrder(Long orderNo);
+
+    void pay(Long orderNo);
 }

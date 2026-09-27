@@ -238,6 +238,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    //支付：虚拟支付，暂时不接入第三方支付，支付后订单进入待发货状态
+    @Override
+    public void pay(Long orderNo) {
+        Order dbOrder = orderMapper.selectById(orderNo);
+        if (dbOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        //只能支付自己的订单
+        Long userId = (Long) LoginContext.getLoginInfo().get("id");
+        if (!dbOrder.getUserId().equals(userId)) {
+            throw new ServiceException("只能支付自己的订单");
+        }
+        if (dbOrder.getStatus() != OrderStatus.UNPAID.getCode()) {
+            throw new ServiceException("当前订单状态不能支付");
+        }
+        Order order = new Order();
+        order.setOrderNo(orderNo);
+        order.setStatus(OrderStatus.WAIT_SEND.getCode());
+        order.setPaymentTime(new Date());
+        orderMapper.updateById(order);
+    }
+
     //取消订单：超时未付款自动取消，下单时扣的库存要加回去
     @Override
     public void cancelOrder(Long orderNo) {

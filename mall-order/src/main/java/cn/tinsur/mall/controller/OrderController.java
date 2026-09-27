@@ -71,6 +71,17 @@ public class OrderController {
     }
 
     /**
+     * 支付订单，虚拟支付，支付后变为待发货
+     * PUT /order/123456/pay
+     */
+    @MyLog(module = "订单模块：支付")
+    @PutMapping("/{orderNo}/pay")
+    public Result pay(@PathVariable Long orderNo) {
+        orderService.pay(orderNo);
+        return Result.ok("支付成功");
+    }
+
+    /**
      * 关闭订单，下单时扣掉的库存会加回去
      * PUT /order/123456/close
      */

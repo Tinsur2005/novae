@@ -1,6 +1,7 @@
 <script setup>
   import {ref, onMounted} from 'vue'
   import {useRouter} from 'vue-router'
+  import {showToast, showSuccessToast} from 'vant'
   import orderApi from '@/api/order/order.js'
   import PageHeader from '@/components/PageHeader.vue'
   import {formatImage, formatPrice} from '@/utils/format.js'
@@ -33,6 +34,30 @@
     })
   })
 
+  //未付款订单的支付倒计时：截止时间 = 下单时间 + 30分钟
+  const remainTime = (order) => {
+    //把 yyyy-MM-dd HH:mm:ss 换成斜杠格式，兼容 iOS 的 Date 解析
+    const createTime = new Date(order.createTime.replace(/-/g, '/')).getTime()
+    return Math.max(createTime + 30 * 60 * 1000 - Date.now(), 0)
+  }
+
+  //倒计时走完，先在前台把订单标成已取消，真实状态以刷新回来的数据为准
+  const onCountdownFinish = (order) => {
+    order.status = 0
+  }
+
+  //虚拟支付：支付成功后订单在前台直接变为待发货
+  const payOrder = (order) => {
+    orderApi.pay(order.orderNo).then(result => {
+      if (result.code === 1) {
+        showSuccessToast(result.msg || '支付成功')
+        order.status = 1
+      } else {
+        showToast(result.msg || '支付失败')
+      }
+    })
+  }
+
   const toHome = () => router.push('/home')
 </script>
 
@@ -58,6 +83,13 @@
             {{ statusMap[order.status]?.text || '未知状态' }}
           </van-tag>
         </div>
+        <!-- 未付款订单显示支付倒计时 -->
+        <div v-if="order.status === -1" class="order-countdown-row">
+          <van-icon name="clock-o"/>
+          <span class="countdown-label">支付剩余时间</span>
+          <van-count-down :time="remainTime(order)" format="mm 分 ss 秒" class="order-countdown"
+                          @finish="onCountdownFinish(order)"/>
+        </div>
         <!-- 订单商品 -->
         <div v-for="item in order.orderItemList" :key="item.id" class="order-item">
           <img class="order-img" :src="formatImage(item.productImage)" :alt="item.productName">
@@ -73,6 +105,10 @@
         <div class="order-footer">
           <span class="order-time">{{ order.createTime }}</span>
           <span class="order-pay">实付 <span class="price">{{ formatPrice(order.payment) }}</span></span>
+        </div>
+        <!-- 未付款订单显示支付按钮 -->
+        <div v-if="order.status === -1" class="order-actions">
+          <van-button round size="small" class="brand-button pay-button" @click="payOrder(order)">立即支付</van-button>
         </div>
       </div>
     </div>
@@ -98,6 +134,25 @@
   .order-no {
     font-size: 12px;
     color: #999;
+  }
+
+  /* 支付倒计时行 */
+  .order-countdown-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #999;
+  }
+
+  .countdown-label {
+    margin-right: 2px;
+  }
+
+  .order-countdown {
+    color: var(--app-primary);
+    font-weight: 600;
   }
 
   .order-item {
@@ -167,5 +222,16 @@
 
   .order-pay .price {
     font-size: 17px;
+  }
+
+  /* 支付按钮行 */
+  .order-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+
+  .pay-button {
+    padding: 0 18px;
   }
 </style>

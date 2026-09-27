@@ -8,6 +8,10 @@ const orderApi = {
     //当前用户的订单列表，每项包含订单商品orderItemList
     list() {
         return request.get("/order")
+    },
+    //虚拟支付，支付后订单变为待发货
+    pay(orderNo) {
+        return request.put("/order/" + orderNo + "/pay")
     }
 }
 
