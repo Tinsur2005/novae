@@ -101,7 +101,7 @@
   </el-card>
 
   <!-- 新增 / 编辑弹窗 -->
-  <el-dialog v-model="dialogVisible" :title="form.id ? '编辑商品' : '新增商品'" width="560px" destroy-on-close>
+  <el-dialog v-model="dialogVisible" :title="form.id ? '编辑商品' : '新增商品'" width="800px" destroy-on-close>
     <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
       <el-form-item label="商品名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入商品名称"/>
@@ -153,6 +153,9 @@
           </el-icon>
         </el-upload>
       </el-form-item>
+      <el-form-item label="商品详情">
+        <WangEditor :initValue="form.detail" @getEditorContent="onEditorChange" v-if="dialogVisible"/>
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="dialogVisible = false">取消</el-button>
@@ -167,6 +170,7 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import dayjs from 'dayjs'
 import productApi from '@/api/product/product.js'
 import categoryApi from '@/api/category/category.js'
+import WangEditor from '@/components/WangEditor.vue'
 import {useTokenStore} from '@/store/token.js'
 
 const tokenStore = useTokenStore()
@@ -307,7 +311,8 @@ const form = reactive({
   price: 0,
   stock: 0,
   status: 1,
-  mainImage: ''
+  mainImage: '',
+  detail: ''
 })
 const rules = {
   name: [{required: true, message: '请输入商品名称', trigger: 'blur'}],
@@ -337,12 +342,27 @@ const handleAdd = () => {
     price: 0,
     stock: 0,
     status: 1,
-    mainImage: ''
+    mainImage: '',
+    detail: ''
   })
   dialogVisible.value = true
 }
 
 const handleEdit = async (row) => {
+  //先重置表单并打开弹窗，编辑器组件创建时detail为空，等数据回来赋值后触发回显
+  Object.assign(form, {
+    id: null,
+    categoryId: null,
+    type: 1,
+    name: '',
+    subtitle: '',
+    price: 0,
+    stock: 0,
+    status: 1,
+    mainImage: '',
+    detail: ''
+  })
+  dialogVisible.value = true
   try {
     const res = await productApi.selectById(row.id)
     if (res.code === 1) {
@@ -356,15 +376,20 @@ const handleEdit = async (row) => {
         price: product.price,
         stock: product.stock,
         status: product.status,
-        mainImage: product.mainImage || ''
+        mainImage: product.mainImage || '',
+        detail: product.detail || ''
       })
-      dialogVisible.value = true
     } else {
       ElMessage.error(res.msg || '查询商品失败')
     }
   } catch (e) {
     /* 拦截器已统一提示 */
   }
+}
+
+//接收富文本编辑器实时编辑的内容
+const onEditorChange = (detail) => {
+  form.detail = detail
 }
 
 const handleSubmit = () => {
