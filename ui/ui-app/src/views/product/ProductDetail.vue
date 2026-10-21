@@ -19,14 +19,22 @@
   productApi.selectById(route.params.id).then(result => {
     if (result.code === 1 && result.data) {
       product.value = result.data
+      //轮播图：主图 + 副图（副图在数据库中是逗号分隔的地址串），trim 后去重，避免出现重复/空白滑块
+      images.value = [product.value.mainImage, ...(product.value.subImages || '').split(',')]
+          .map(url => (url || '').trim()).filter(url => url)
+          .filter((url, index, all) => all.indexOf(url) === index)
     } else {
       notFound.value = true
     }
   })
 
-  //轮播图：主图 + 副图（副图在数据库中是逗号分隔的地址串）
-  const images = computed(() => [product.value.mainImage, ...(product.value.subImages || '').split(',')]
-      .map(url => (url || '').trim()).filter(url => url))
+  //轮播图列表（商品加载完成后填充）
+  const images = ref([])
+
+  //某张图片加载失败（文件已不存在）时把它从轮播中剔除
+  const removeImage = (url) => {
+    images.value = images.value.filter(item => item !== url)
+  }
 
   //购买数量
   const count = ref(1)
@@ -67,13 +75,20 @@
       <van-button round type="primary" class="brand-button" @click="toHome">去逛逛</van-button>
     </van-empty>
 
+    <!-- 加载中 -->
+    <div v-else-if="!product" class="detail-loading">加载中...</div>
+
     <template v-else>
     <!-- 商品轮播图 -->
-    <van-swipe :autoplay="4000" indicator-color="#a854f7" class="detail-swipe">
+    <van-swipe v-if="images.length" :autoplay="4000" indicator-color="#1a1a1a" class="detail-swipe">
       <van-swipe-item v-for="image in images" :key="image">
-        <img class="detail-img" :src="formatImage(image)" :alt="product.name">
+        <img class="detail-img" :src="formatImage(image)" :alt="product.name" @error="removeImage(image)">
       </van-swipe-item>
     </van-swipe>
+    <!-- 所有图片都失效时的占位 -->
+    <div v-else class="detail-swipe detail-img-empty">
+      <van-icon name="photo-o" size="48" color="#c0c4cc"/>
+    </div>
 
     <!-- 商品信息 -->
     <div class="detail-info card">
@@ -92,7 +107,8 @@
     <!-- 商品详情 -->
     <div class="detail-desc card">
       <div class="detail-desc-title">商品详情</div>
-      <div v-if="product.detail" class="detail-desc-content">{{ product.detail }}</div>
+      <!-- 富文本内容，用 v-html 渲染 -->
+      <div v-if="product.detail" class="detail-desc-content" v-html="product.detail"></div>
       <van-empty v-else description="暂无详细介绍" image-size="60"/>
     </div>
 
@@ -125,6 +141,22 @@
     aspect-ratio: 1 / 1;
     object-fit: contain;
     background-color: #fff;
+  }
+
+  /* 图片全部失效时的占位块 */
+  .detail-img-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    background-color: #fff;
+  }
+
+  .detail-loading {
+    padding: 120px 0;
+    text-align: center;
+    font-size: 14px;
+    color: #999;
   }
 
   .detail-info {
@@ -194,8 +226,13 @@
     font-size: 14px;
     color: #606266;
     line-height: 1.6;
-    white-space: pre-wrap;
     word-break: break-all;
+  }
+
+  /* 富文本里的图片不超出卡片宽度 */
+  .detail-desc-content :deep(img) {
+    max-width: 100%;
+    display: block;
   }
 
   /* 底部操作栏 */

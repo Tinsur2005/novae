@@ -5,6 +5,7 @@
   import categoryApi from '@/api/category/category.js'
   import productApi from '@/api/product/product.js'
   import ProductCard from '@/components/ProductCard.vue'
+  import logo from '@/assets/logo.png'
 
   const router = useRouter()
 
@@ -79,16 +80,16 @@
 
 <template>
   <div class="home pb-tab">
-    <!-- 顶部：品牌 + 胶囊搜索框 -->
+    <!-- 顶部：LOGO + 胶囊搜索框 -->
     <div class="home-top">
-      <div class="brand">Novae星绽</div>
+      <img class="brand" :src="logo" alt="Novae星绽">
       <div class="search-box">
-        <van-search v-model="keyword" placeholder="请输入您想找的内容" shape="round"
+        <van-search v-model="keyword" placeholder="搜索商品" shape="round"
                     background="transparent" @search="onSearch"/>
       </div>
     </div>
 
-    <!-- 分类标签行，可横向滑动 -->
+    <!-- 分类标签行：文字式 tab，可横向滑动 -->
     <div class="tab-row">
       <div v-for="(tab, index) in tabs" :key="index" class="tab-item"
            :class="{active: index === activeTab}" @click="selectTab(index)">
@@ -106,6 +107,12 @@
 </template>
 
 <style scoped>
+  /* 首页整体白底，与截图一致 */
+  .home {
+    min-height: 100vh;
+    background-color: #fff;
+  }
+
   /* 顶部白色栏：品牌字 + 搜索框 */
   .home-top {
     display: flex;
@@ -117,10 +124,8 @@
 
   .brand {
     flex-shrink: 0;
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--app-primary);
-    letter-spacing: 0.5px;
+    height: 48px;
+    object-fit: contain;
   }
 
   .search-box {
@@ -133,17 +138,16 @@
   }
 
   :deep(.search-box .van-search__content) {
-    background-color: #f5f5f7;
+    background-color: #f5f6f7;
   }
 
-  /* 分类标签行 */
+  /* 分类标签行：白底文字 tab，激活项黑色加粗 */
   .tab-row {
     display: flex;
-    gap: 8px;
-    padding: 10px 12px;
+    gap: 26px;
+    padding: 12px 14px 8px;
     overflow-x: auto;
     background-color: #fff;
-    border-radius: 0 0 16px 16px;
     /*隐藏横向滚动条*/
     scrollbar-width: none;
   }
@@ -154,24 +158,22 @@
 
   .tab-item {
     flex-shrink: 0;
-    padding: 5px 14px;
-    border-radius: 15px;
-    background-color: #f5f5f7;
-    color: #666;
-    font-size: 13px;
+    color: #999;
+    font-size: 15px;
+    cursor: pointer;
   }
 
   .tab-item.active {
-    background-color: var(--app-primary);
-    color: #fff;
-    font-weight: 600;
+    color: var(--app-primary);
+    font-weight: 700;
   }
 
-  /* 商品两列宫格 */
+  /* 商品两列宫格：白底页面，与顶部连成一体 */
   .product-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding: 8px;
+    gap: 20px 10px;
+    padding: 10px 12px;
+    background-color: #fff;
   }
 </style>

@@ -24,12 +24,25 @@
     })
   })
 
-  //菜单配置
+  //订单状态入口，点击跳订单列表对应tab
+  const orderEntries = [
+    {title: '待付款', icon: 'credit-pay', tab: -1},
+    {title: '待发货', icon: 'tosend', tab: 1},
+    {title: '待收货', icon: 'logistics', tab: 2},
+    {title: '已完成', icon: 'completed', tab: 3}
+  ]
+
+  //服务菜单
   const menus = [
     {title: '个人信息', icon: 'user-o', path: '/user/profile'},
-    {title: '收货地址', icon: 'location-o', path: '/shipping'},
-    {title: '我的订单', icon: 'orders-o', path: '/order'}
+    {title: '收货地址', icon: 'location-o', path: '/shipping'}
   ]
+
+  //去订单列表的指定状态tab
+  const toOrder = (tab) => router.push(tab === undefined ? '/order' : '/order?tab=' + tab)
+
+  //头像：去个人信息
+  const toProfile = () => router.push('/user/profile')
 
   //退出登录
   const logout = () => {
@@ -51,13 +64,11 @@
 
 <template>
   <div class="user pb-tab">
-    <!-- 用户信息卡片：渐变背景 -->
-    <div class="user-card">
-      <div class="user-deco user-deco-1"></div>
-      <div class="user-deco user-deco-2"></div>
-      <img v-if="user.avatar" class="user-avatar" :src="formatImage(user.avatar)" alt="头像">
-      <div v-else class="user-avatar user-avatar-default">
-        <van-icon name="user-o" size="30" color="#fff"/>
+    <!-- 顶部用户区：头像 + 用户名 + 设置按钮 -->
+    <div class="user-header">
+      <img v-if="user.avatar" class="user-avatar" :src="formatImage(user.avatar)" alt="头像" @click="toProfile">
+      <div v-else class="user-avatar user-avatar-default" @click="toProfile">
+        <van-icon name="user-o" size="28" color="#c0c4cc"/>
       </div>
       <div class="user-info">
         <div class="user-name">{{ user.name || '盲盒玩家' }}</div>
@@ -65,17 +76,32 @@
           <span v-if="user.phone">{{ user.phone }}</span>
           <span v-if="user.phone && user.email"> | </span>
           <span v-if="user.email">{{ user.email }}</span>
-          <span v-if="!user.phone && !user.email">点击下方编辑个人信息</span>
+          <span v-if="!user.phone && !user.email">点击头像编辑个人信息</span>
         </div>
       </div>
     </div>
 
-    <!-- 功能菜单 -->
-    <div class="menu-card card">
-      <div v-for="menu in menus" :key="menu.path" class="menu-item" @click="router.push(menu.path)">
-        <div class="menu-icon-wrap">
-          <van-icon class="menu-icon" :name="menu.icon" size="18"/>
+    <!-- 我的订单卡片：全部入口 + 四个状态 -->
+    <div class="order-card card">
+      <div class="card-head" @click="toOrder()">
+        <span class="card-title">我的订单</span>
+        <span class="card-more">全部 <van-icon name="arrow"/></span>
+      </div>
+      <div class="order-entries">
+        <div v-for="entry in orderEntries" :key="entry.title" class="entry-item" @click="toOrder(entry.tab)">
+          <van-icon :name="entry.icon" size="26"/>
+          <span class="entry-title">{{ entry.title }}</span>
         </div>
+      </div>
+    </div>
+
+    <!-- 服务菜单卡片 -->
+    <div class="menu-card card">
+      <div class="card-head">
+        <span class="card-title">我的服务</span>
+      </div>
+      <div v-for="menu in menus" :key="menu.path" class="menu-item" @click="router.push(menu.path)">
+        <van-icon class="menu-icon" :name="menu.icon" size="18"/>
         <span class="menu-title">{{ menu.title }}</span>
         <van-icon class="menu-arrow" name="arrow"/>
       </div>
@@ -92,72 +118,104 @@
 </template>
 
 <style scoped>
-  /* 渐变用户卡片 */
-  .user-card {
-    position: relative;
+  /* 顶部用户区 */
+  .user-header {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 30px 16px 26px;
-    background: var(--app-primary);
-    border-radius: 0 0 20px 20px;
-    overflow: hidden;
-  }
-
-  /* 卡片上的装饰泡泡 */
-  .user-deco {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    pointer-events: none;
-  }
-
-  .user-deco-1 {
-    width: 90px;
-    height: 90px;
-    top: -30px;
-    right: 30px;
-  }
-
-  .user-deco-2 {
-    width: 50px;
-    height: 50px;
-    bottom: -16px;
-    right: -10px;
+    padding: 32px 16px 20px;
   }
 
   .user-avatar {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
-    border: 2px solid rgba(255, 255, 255, 0.7);
+    border: 2px solid #fff;
+    background: #fff;
+    cursor: pointer;
   }
 
   .user-avatar-default {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 26px;
-    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .user-info {
+    flex: 1;
+    min-width: 0;
   }
 
   .user-name {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 700;
-    color: #fff;
+    color: #1a1a1a;
   }
 
   .user-contact {
     margin-top: 4px;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.85);
+    color: #999;
   }
 
+  /* 卡片头：标题 + 更多入口 */
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 14px 4px;
+    cursor: pointer;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .card-more {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 13px;
+    color: #999;
+  }
+
+  /* 订单四宫格 */
+  .order-card {
+    margin: 0 10px;
+  }
+
+  .order-entries {
+    display: flex;
+    padding: 8px 0 18px;
+  }
+
+  .entry-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #1a1a1a;
+    cursor: pointer;
+  }
+
+  .entry-title {
+    font-size: 12px;
+    color: #666;
+  }
+
+  /* 服务菜单 */
   .menu-card {
-    margin: 10px 8px 0;
+    margin: 10px 10px 0;
     overflow: hidden;
+  }
+
+  .menu-card .card-head {
+    cursor: default;
   }
 
   .menu-item {
@@ -172,19 +230,8 @@
     border-bottom: none;
   }
 
-  /* 菜单图标用浅紫圆角底，更有潮玩感 */
-  .menu-icon-wrap {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--app-primary-light);
-  }
-
   .menu-icon {
-    color: var(--app-primary);
+    color: #1a1a1a;
   }
 
   .menu-title {
@@ -197,15 +244,16 @@
     color: #c0c4cc;
   }
 
+  /* 退出登录 */
   .logout-card {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    margin: 8px;
+    margin: 12px 10px 0;
     padding: 15px 0;
     font-size: 15px;
-    color: var(--app-primary);
+    color: #1a1a1a;
   }
 
   .copyright {

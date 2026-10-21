@@ -49,126 +49,116 @@
 
   //去注册
   const toRegister = () => router.push('/register')
+
+  //关闭登录页，返回上一个页面
+  const goBack = () => router.back()
 </script>
 
 <template>
-  <div class="login">
-    <!-- 渐变背景上的装饰泡泡 -->
-    <div class="bubble bubble-1"></div>
-    <div class="bubble bubble-2"></div>
-    <div class="bubble bubble-3"></div>
+  <div class="auth-page">
+    <!-- 左上角关闭 -->
+    <van-icon name="cross" class="auth-close" @click="goBack"/>
 
-    <!-- 商城Logo：盲盒造型 -->
-    <div class="login-logo">
-      <van-icon name="gift-o" color="#fff" size="38"/>
-    </div>
-    <h1 class="login-title">Novae星绽</h1>
-    <p class="login-subtitle">开启属于你的惊喜时刻</p>
+    <!-- 大标题 -->
+    <h1 class="auth-title">账号登录</h1>
 
     <!-- 登录表单 -->
-    <van-form class="login-form" @submit="submit">
-      <van-cell-group inset round>
-        <van-field v-model="loginInfo.name" name="name" label="用户名" placeholder="请输入用户名"
-                   left-icon="contact" :rules="rules.name" clearable/>
-        <van-field v-model="loginInfo.password" name="password" label="密码" placeholder="请输入密码"
-                   left-icon="lock" type="password" :rules="rules.password" @keyup.enter="login"/>
-      </van-cell-group>
-      <div class="login-button-wrap">
-        <van-button round block type="primary" class="brand-button" native-type="submit">
-          登 录
-        </van-button>
+    <van-form class="auth-form" @submit="submit">
+      <div class="field-block">
+        <div class="field-label">用户名</div>
+        <van-field v-model="loginInfo.name" name="name" placeholder="请输入用户名"
+                   :border="false" :rules="rules.name" clearable/>
       </div>
+      <div class="field-block">
+        <div class="field-label">密码</div>
+        <van-field v-model="loginInfo.password" name="password" placeholder="请输入密码"
+                   :border="false" type="password" :rules="rules.password" @keyup.enter="login"/>
+      </div>
+      <van-button round block native-type="submit" class="auth-button">
+        登 录
+      </van-button>
     </van-form>
 
-    <p class="login-register">还没有账号？<span @click="toRegister">立即注册</span></p>
+    <p class="auth-switch">- 还没有账号？<span @click="toRegister">立即注册</span> -</p>
   </div>
 </template>
 
 <style scoped>
-  .login {
-    position: relative;
+  .auth-page {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding-top: 90px;
-    overflow: hidden;
-    background: var(--app-primary-light);
+    padding: 16px 28px 40px;
+    box-sizing: border-box;
+    background: #fff;
   }
 
-  /* 漂浮的装饰泡泡，增加潮玩氛围 */
-  .bubble {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  .bubble-1 {
-    width: 120px;
-    height: 120px;
-    top: -30px;
-    right: -30px;
-    background: rgba(255, 110, 196, 0.4);
-  }
-
-  .bubble-2 {
-    width: 70px;
-    height: 70px;
-    top: 150px;
-    left: -20px;
-    background: rgba(168, 84, 247, 0.3);
-  }
-
-  .bubble-3 {
-    width: 44px;
-    height: 44px;
-    top: 60px;
-    left: 70px;
-    background: rgba(255, 190, 120, 0.35);
-  }
-
-  .login-logo {
-    width: 76px;
-    height: 76px;
-    border-radius: 24px;
-    background: var(--app-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 38px;
-    box-shadow: 0 8px 20px rgba(168, 84, 247, 0.35);
-  }
-
-  .login-title {
-    margin: 16px 0 4px;
+  .auth-close {
+    align-self: flex-start;
     font-size: 24px;
-    letter-spacing: 1px;
-    color: var(--app-primary);
+    color: #1a1a1a;
+    cursor: pointer;
   }
 
-  .login-subtitle {
-    margin: 0 0 32px;
+  .auth-title {
+    margin: 96px 0 0;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .auth-form {
+    margin-top: 56px;
+  }
+
+  /* 下划线风格的字段块：上方小灰 label + 无框输入 + 底部分隔线 */
+  .field-block {
+    margin-bottom: 36px;
+  }
+
+  .field-label {
+    font-size: 14px;
+    color: #999;
+  }
+
+  .field-block :deep(.van-field) {
+    padding: 10px 0 12px;
+    background: transparent;
+  }
+
+  .field-block :deep(.van-field__control) {
+    font-size: 18px;
+    color: #1a1a1a;
+  }
+
+  .field-block::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: #ececec;
+  }
+
+  /* 大胶囊提交按钮 */
+  .auth-button {
+    margin-top: 32px;
+    height: 52px;
+    font-size: 17px;
+    font-weight: 600;
+    border: none;
+    background: var(--app-primary);
+    color: #fff;
+  }
+
+  .auth-switch {
+    margin-top: auto;
+    padding-top: 40px;
+    text-align: center;
     font-size: 13px;
     color: #999;
   }
 
-  .login-form {
-    width: 100%;
-  }
-
-  .login-button-wrap {
-    margin: 24px 16px 0;
-  }
-
-  .login-register {
-    margin-top: 20px;
-    font-size: 13px;
-    color: #999;
-  }
-
-  .login-register span {
-    color: var(--app-primary);
+  .auth-switch span {
+    color: #1a1a1a;
     font-weight: 600;
   }
 </style>

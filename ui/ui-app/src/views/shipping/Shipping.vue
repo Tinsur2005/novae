@@ -135,7 +135,7 @@
         <div class="shipping-row">
           <span class="shipping-name">{{ shipping.receiverName }}</span>
           <span class="shipping-mobile">{{ shipping.receiverMobile }}</span>
-          <van-tag v-if="shipping.isDefault === 1" round color="#a854f7">
+          <van-tag v-if="shipping.isDefault === 1" round color="#1a1a1a">
             默认
           </van-tag>
         </div>

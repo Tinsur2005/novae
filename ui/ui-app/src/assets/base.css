@@ -1,17 +1,17 @@
 /* ==================== 主题变量 ==================== */
-/* 盲盒潮玩风格：紫主色+粉点缀，活泼梦幻 */
+/* 白灰简约风格：黑主色+灰层次，干净利落 */
 :root {
-  /* 主题色：按钮、横幅、标题装饰统一用它，vant组件的主色也是它 */
-  --app-primary: #a854f7;
-  /* 点缀色：价格、角标等需要更醒目的地方 */
-  --app-pink: #ff6ec4;
+  /* 主题色：按钮、激活态、标题装饰统一用它，vant组件的主色也是它 */
+  --app-primary: #1a1a1a;
+  /* 点缀色：价格等需要更醒目的地方，白灰风格下用黑色加粗 */
+  --app-pink: #1a1a1a;
   /* 主题色的浅色背景，用于装饰图标底、浅色氛围背景 */
-  --app-primary-light: #f6effc;
+  --app-primary-light: #f5f6f7;
   /* 页面背景色、卡片圆角 */
-  --app-bg: #faf7fd;
+  --app-bg: #f5f6f7;
   --app-card-radius: 12px;
 
-  /* 覆盖 vant 的主题变量，让组件库跟上盲盒配色 */
+  /* 覆盖 vant 的主题变量，让组件库跟上白灰配色 */
   --van-primary-color: var(--app-primary);
   --van-tabbar-item-active-color: var(--app-primary);
   --van-nav-bar-title-font-size: 16px;
@@ -26,7 +26,7 @@ html, body {
 
 body {
   min-height: 100vh;
-  background-color: #efe9f7;
+  background-color: #eef0f2;
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC',
       'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
