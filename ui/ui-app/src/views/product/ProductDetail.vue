@@ -13,10 +13,14 @@
   const cartCountStore = useCartCountStore()
 
   //商品详情
-  const product = ref({})
+  const product = ref(null)
+  //商品不存在（已被删除）
+  const notFound = ref(false)
   productApi.selectById(route.params.id).then(result => {
     if (result.code === 1 && result.data) {
       product.value = result.data
+    } else {
+      notFound.value = true
     }
   })
 
@@ -49,12 +53,21 @@
 
   //跳转购物车
   const toCart = () => router.push('/cart')
+
+  //去首页逛逛
+  const toHome = () => router.push('/home')
 </script>
 
 <template>
   <div class="detail pb-action">
     <PageHeader title="商品详情"/>
 
+    <!-- 商品不存在：已被删除 -->
+    <van-empty v-if="notFound" description="商品不存在" image="search">
+      <van-button round type="primary" class="brand-button" @click="toHome">去逛逛</van-button>
+    </van-empty>
+
+    <template v-else>
     <!-- 商品轮播图 -->
     <van-swipe :autoplay="4000" indicator-color="#a854f7" class="detail-swipe">
       <van-swipe-item v-for="image in images" :key="image">
@@ -98,6 +111,7 @@
         {{ soldOut ? '已售罄' : '加入购物车' }}
       </van-button>
     </div>
+    </template>
   </div>
 </template>
 

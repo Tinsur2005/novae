@@ -15,6 +15,7 @@ import Profile from '@/views/user/Profile.vue'
 import Shipping from '@/views/shipping/Shipping.vue'
 import OrderConfirm from '@/views/order/OrderConfirm.vue'
 import OrderList from '@/views/order/OrderList.vue'
+import OrderDetail from '@/views/order/OrderDetail.vue'
 
 //创建路由器
 const router = createRouter({
@@ -33,9 +34,9 @@ const router = createRouter({
                 //其余子页面隐藏底部TabBar
                 {path: '/product', component: ProductList},
                 {path: '/product/:id', component: ProductDetail},
-                //订单模块后端尚未开发，页面先做占位
                 {path: '/order/confirm', component: OrderConfirm},
                 {path: '/order', component: OrderList},
+                {path: '/order/:orderNo', component: OrderDetail},
                 {path: '/user/profile', component: Profile},
                 {path: '/shipping', component: Shipping}
             ]

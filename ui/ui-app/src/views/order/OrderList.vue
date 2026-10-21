@@ -59,6 +59,12 @@
   }
 
   const toHome = () => router.push('/home')
+
+  //点击订单卡片进入订单详情
+  const toDetail = (orderNo) => router.push('/order/' + orderNo)
+
+  //点击订单中的商品进入商品详情（商品已删除时详情页会提示商品不存在）
+  const toProduct = (item) => router.push('/product/' + item.productId)
 </script>
 
 <template>
@@ -75,7 +81,7 @@
 
     <!-- 订单列表 -->
     <div v-if="!loading" class="orders">
-      <div v-for="order in list" :key="order.orderNo" class="order-card card">
+      <div v-for="order in list" :key="order.orderNo" class="order-card card" @click="toDetail(order.orderNo)">
         <!-- 订单头部：订单号 + 状态 -->
         <div class="order-header">
           <span class="order-no">订单号：{{ order.orderNo }}</span>
@@ -91,7 +97,7 @@
                           @finish="onCountdownFinish(order)"/>
         </div>
         <!-- 订单商品 -->
-        <div v-for="item in order.orderItemList" :key="item.id" class="order-item">
+        <div v-for="item in order.orderItemList" :key="item.id" class="order-item" @click.stop="toProduct(item)">
           <img class="order-img" :src="formatImage(item.productImage)" :alt="item.productName">
           <div class="order-info">
             <div class="order-name ellipsis-2">{{ item.productName }}</div>
@@ -108,7 +114,7 @@
         </div>
         <!-- 未付款订单显示支付按钮 -->
         <div v-if="order.status === -1" class="order-actions">
-          <van-button round size="small" class="brand-button pay-button" @click="payOrder(order)">立即支付</van-button>
+          <van-button round size="small" class="brand-button pay-button" @click.stop="payOrder(order)">立即支付</van-button>
         </div>
       </div>
     </div>
@@ -159,6 +165,7 @@
     display: flex;
     gap: 10px;
     padding: 12px 0 0;
+    cursor: pointer;
   }
 
   .order-img {

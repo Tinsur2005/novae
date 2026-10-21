@@ -9,6 +9,10 @@ const orderApi = {
     list() {
         return request.get("/order")
     },
+    //订单详情，包含订单商品明细
+    detail(orderNo) {
+        return request.get("/order/" + orderNo)
+    },
     //虚拟支付，支付后订单变为待发货
     pay(orderNo) {
         return request.put("/order/" + orderNo + "/pay")

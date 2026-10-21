@@ -49,6 +49,15 @@ public class OrderController {
     }
 
     /**
+     * 订单详情，包含订单商品明细，只能查看自己的订单
+     * GET /order/123456
+     */
+    @GetMapping("/{orderNo}")
+    public Result<OrderVO> detail(@PathVariable Long orderNo) {
+        return Result.ok(orderService.detail(orderNo));
+    }
+
+    /**
      * 分页查询订单
      * GET /order/page?page=1&limit=10&orderNo=xxx&userId=1&status=-1
      */

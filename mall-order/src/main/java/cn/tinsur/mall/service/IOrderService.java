@@ -22,6 +22,8 @@ public interface IOrderService extends IService<Order> {
 
     List<OrderVO> listAll();
 
+    OrderVO detail(Long orderNo);
+
     IPage<OrderVO> page(OrderQuery orderQuery);
 
     void send(Long orderNo);

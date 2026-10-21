@@ -163,6 +163,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return list;
     }
 
+    //订单详情：订单 + 商品明细，只能查看自己的订单
+    @Override
+    public OrderVO detail(Long orderNo) {
+        Order order = orderMapper.selectById(orderNo);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+        //只能查看自己的订单
+        Long userId = (Long) LoginContext.getLoginInfo().get("id");
+        if (!order.getUserId().equals(userId)) {
+            throw new ServiceException("只能查看自己的订单");
+        }
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(order, orderVO);
+        LambdaQueryWrapper<OrderItem> itemQueryWrapper = new LambdaQueryWrapper<>();
+        itemQueryWrapper.eq(OrderItem::getOrderNo, orderNo);
+        orderVO.setOrderItemList(orderItemMapper.selectList(itemQueryWrapper));
+        return orderVO;
+    }
+
     @Override
     public IPage<OrderVO> page(OrderQuery orderQuery) {
         IPage<Order> page = new Page<>(orderQuery.getPage(), orderQuery.getLimit());
