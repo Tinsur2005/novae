@@ -80,6 +80,17 @@ public class OrderController {
     }
 
     /**
+     * 选择收货地址，只允许未付款订单（秒杀订单支付前必须先选地址）
+     * PUT /order/123456/shipping/1
+     */
+    @MyLog(module = "订单模块：选择收货地址")
+    @PutMapping("/{orderNo}/shipping/{shippingId}")
+    public Result updateShipping(@PathVariable Long orderNo, @PathVariable Long shippingId) {
+        orderService.updateShipping(orderNo, shippingId);
+        return Result.ok("收货地址已保存");
+    }
+
+    /**
      * 支付订单，虚拟支付，支付后变为待发货
      * PUT /order/123456/pay
      */

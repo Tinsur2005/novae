@@ -37,6 +37,15 @@ public class ShippingController {
         return Result.ok(list);
     }
 
+    /**
+     * 根据ID查询收货地址，只能查询自己的地址（订单详情展示收货地址用）
+     * GET /shipping/1
+     */
+    @GetMapping("/{id}")
+    public Result<Shipping> selectById(@PathVariable Long id) {
+        return Result.ok(shippingService.selectById(id));
+    }
+
     @PostMapping
     public Result add(@RequestBody Shipping shipping) {
         shippingService.add(shipping);

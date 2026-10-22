@@ -36,6 +36,17 @@ public class ShippingServiceImpl extends ServiceImpl<ShippingMapper, Shipping> i
     }
 
     @Override
+    public Shipping selectById(Long id) {
+        Long userId = (Long) LoginContext.getLoginInfo().get("id");
+        Shipping dbShipping = shippingMapper.selectById(id);
+        // 只能查看自己的收货地址
+        if (dbShipping == null || !dbShipping.getUserId().equals(userId)) {
+            throw new ServiceException("收货地址不存在");
+        }
+        return dbShipping;
+    }
+
+    @Override
     public void add(Shipping shipping) {
         Long userId = (Long) LoginContext.getLoginInfo().get("id");
         shipping.setUserId(userId);

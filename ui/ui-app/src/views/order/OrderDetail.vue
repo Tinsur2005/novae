@@ -3,6 +3,7 @@
   import {useRoute, useRouter} from 'vue-router'
   import {showToast, showSuccessToast, showConfirmDialog} from 'vant'
   import orderApi from '@/api/order/order.js'
+  import shippingApi from '@/api/shipping/shipping.js'
   import PageHeader from '@/components/PageHeader.vue'
   import {formatImage, formatPrice} from '@/utils/format.js'
 
@@ -24,7 +25,11 @@
   const order = ref(null)
   const loading = ref(true)
 
-  onMounted(() => {
+  onMounted(() => loadDetail())
+
+  //查询订单详情，选择收货地址后重新加载时不再展示整页loading
+  const loadDetail = (showLoading = true) => {
+    if (showLoading) loading.value = true
     orderApi.detail(route.params.orderNo).then(result => {
       if (result.code === 1) {
         order.value = result.data
@@ -35,7 +40,45 @@
     }).catch(() => {
       loading.value = false
     })
-  })
+  }
+
+  //====================收货地址选择====================
+  //未付款订单（秒杀订单支付前必须先选地址），点地址卡片弹出地址选择
+  const addressPickerVisible = ref(false)
+  const addressList = ref([])
+
+  const openAddressPicker = () => {
+    if (order.value.status !== -1) {
+      return
+    }
+    shippingApi.list().then(result => {
+      if (result.code === 1) {
+        addressList.value = result.data || []
+        addressPickerVisible.value = true
+      } else {
+        showToast(result.msg || '获取收货地址失败')
+      }
+    })
+  }
+
+  //选中一个地址，保存到订单后刷新详情
+  const chooseAddress = (item) => {
+    orderApi.setShipping(order.value.orderNo, item.id).then(result => {
+      if (result.code === 1) {
+        addressPickerVisible.value = false
+        showSuccessToast(result.msg || '收货地址已保存')
+        loadDetail(false)
+      } else {
+        showToast(result.msg || '保存收货地址失败')
+      }
+    })
+  }
+
+  //跳转地址管理页，返回时重新加载地址列表和订单详情
+  const toShippingManage = () => {
+    addressPickerVisible.value = false
+    router.push('/shipping')
+  }
 
   //商品总额 = 实付金额 - 运费
   const goodsTotal = computed(() => order.value ? order.value.payment - order.value.postage : 0)
@@ -52,8 +95,12 @@
     if (order.value) order.value.status = 0
   }
 
-  //虚拟支付：支付成功后订单在前台直接变为待发货
+  //虚拟支付：支付成功后订单在前台直接变为待发货；没有收货地址时先去选地址
   const payOrder = () => {
+    if (!order.value.shipping) {
+      openAddressPicker()
+      return
+    }
     orderApi.pay(order.value.orderNo).then(result => {
       if (result.code === 1) {
         showSuccessToast(result.msg || '支付成功')
@@ -113,6 +160,28 @@
           </div>
         </div>
         <div v-if="order.status === -1" class="status-tip">请尽快完成支付，超时订单将自动取消</div>
+      </div>
+
+      <!-- 收货地址：未付款订单可点击选择/修改（秒杀订单支付前必须选） -->
+      <div v-if="order.shipping || order.status === -1" class="address-card card" @click="openAddressPicker">
+        <van-icon name="location-o" class="address-icon"/>
+        <div class="address-info">
+          <template v-if="order.shipping">
+            <div class="address-receiver">
+              <span class="receiver-name">{{ order.shipping.receiverName }}</span>
+              <span class="receiver-mobile">{{ order.shipping.receiverMobile }}</span>
+              <van-tag v-if="order.shipping.isDefault === 1" color="#1a1a1a" size="medium">默认</van-tag>
+            </div>
+            <div class="address-detail ellipsis-2">
+              {{ order.shipping.receiverProvince + order.shipping.receiverCity + order.shipping.receiverDistrict + order.shipping.receiverAddress }}
+            </div>
+          </template>
+          <template v-else>
+            <div class="address-empty">请选择收货地址</div>
+            <div class="address-empty-tip">支付前需要选择收货地址</div>
+          </template>
+        </div>
+        <van-icon v-if="order.status === -1" name="arrow" class="address-arrow"/>
       </div>
 
       <!-- 商品清单 -->
@@ -179,6 +248,29 @@
       <!-- 已发货订单底部确认收货栏 -->
       <van-submit-bar v-else-if="order.status === 2" class="app-fixed" button-text="确认收货"
                       @submit="confirmReceipt"/>
+
+      <!-- 收货地址选择弹层 -->
+      <van-popup v-model:show="addressPickerVisible" position="bottom" round>
+        <div class="address-picker">
+          <div class="picker-title">选择收货地址</div>
+          <div class="picker-list">
+            <div v-for="item in addressList" :key="item.id" class="picker-item"
+                 :class="{active: order.shipping && order.shipping.id === item.id}" @click="chooseAddress(item)">
+              <div class="picker-receiver">
+                <span class="receiver-name">{{ item.receiverName }}</span>
+                <span class="receiver-mobile">{{ item.receiverMobile }}</span>
+                <van-tag v-if="item.isDefault === 1" color="#1a1a1a" size="medium">默认</van-tag>
+              </div>
+              <div class="picker-address ellipsis-2">
+                {{ item.receiverProvince + item.receiverCity + item.receiverDistrict + item.receiverAddress }}
+              </div>
+            </div>
+            <van-empty v-if="addressList.length === 0" description="还没有收货地址" image-size="60"/>
+          </div>
+          <!-- 去地址管理页新增/编辑地址，返回后刷新列表 -->
+          <van-button round block plain class="manage-button" @click="toShippingManage">管理收货地址</van-button>
+        </div>
+      </van-popup>
     </template>
   </div>
 </template>
@@ -217,6 +309,118 @@
     margin-top: 8px;
     font-size: 12px;
     color: #999;
+  }
+
+  /* 收货地址卡 */
+  .address-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px;
+    padding: 14px 12px;
+    cursor: pointer;
+  }
+
+  .address-icon {
+    flex-shrink: 0;
+    font-size: 20px;
+    color: var(--app-primary);
+  }
+
+  .address-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .address-receiver {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .receiver-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .receiver-mobile {
+    font-size: 13px;
+    color: #666;
+  }
+
+  .address-detail {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #606266;
+    line-height: 1.4;
+  }
+
+  .address-empty {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--app-primary);
+  }
+
+  .address-empty-tip {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #999;
+  }
+
+  .address-arrow {
+    flex-shrink: 0;
+    color: #c8c9cc;
+  }
+
+  /* 收货地址选择弹层 */
+  .address-picker {
+    padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .picker-title {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .picker-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-top: 12px;
+  }
+
+  .picker-item {
+    padding: 12px;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .picker-item.active {
+    border-color: var(--app-primary);
+  }
+
+  .picker-receiver {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .picker-address {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #606266;
+    line-height: 1.4;
+  }
+
+  /* 管理收货地址按钮 */
+  .manage-button {
+    margin-top: 4px;
+    color: var(--app-primary);
+    border-color: var(--app-primary);
   }
 
   /* 商品清单 */

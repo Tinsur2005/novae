@@ -17,6 +17,8 @@ public interface IShippingService extends IService<Shipping> {
 
     List<Shipping> listUserShipping();
 
+    Shipping selectById(Long id);
+
     void add(Shipping shipping);
 
     void update(Shipping shipping);

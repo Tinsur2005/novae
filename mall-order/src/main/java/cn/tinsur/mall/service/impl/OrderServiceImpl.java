@@ -4,10 +4,13 @@ import cn.tinsur.mall.api.cart.CartClient;
 import cn.tinsur.mall.api.pojo.entity.Product;
 import cn.tinsur.mall.api.pojo.vo.CartVO;
 import cn.tinsur.mall.api.product.ProductClient;
+import cn.tinsur.mall.api.pojo.entity.Shipping;
+import cn.tinsur.mall.api.shipping.ShippingClient;
 import cn.tinsur.mall.constant.MqConstant;
 import cn.tinsur.mall.enums.OrderStatus;
 import cn.tinsur.mall.exception.ServiceException;
 import cn.tinsur.mall.pojo.entity.Order;
+import cn.tinsur.mall.pojo.message.SeckillOrderMessage;
 import cn.tinsur.mall.mapper.OrderMapper;
 import cn.tinsur.mall.pojo.entity.OrderItem;
 import cn.tinsur.mall.mapper.OrderItemMapper;
@@ -57,6 +60,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private CartClient cartClient;
     @Autowired
     private ProductClient productClient;
+    @Autowired
+    private ShippingClient shippingClient;
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
@@ -180,7 +185,41 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         LambdaQueryWrapper<OrderItem> itemQueryWrapper = new LambdaQueryWrapper<>();
         itemQueryWrapper.eq(OrderItem::getOrderNo, orderNo);
         orderVO.setOrderItemList(orderItemMapper.selectList(itemQueryWrapper));
+        //收货地址：秒杀订单支付前可能还没有选择，shippingId为空则不查
+        if (order.getShippingId() != null) {
+            Result<Shipping> shippingResult = shippingClient.selectById(order.getShippingId());
+            if (shippingResult.getCode() == Result.OK && shippingResult.getData() != null) {
+                orderVO.setShipping(shippingResult.getData());
+            }
+        }
         return orderVO;
+    }
+
+    //选择收货地址：只允许未付款订单，且地址必须是本人的（秒杀订单支付前选择，普通订单也可借此修改）
+    @Override
+    public void updateShipping(Long orderNo, Long shippingId) {
+        Order order = orderMapper.selectById(orderNo);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+        //只能操作自己的订单
+        Long userId = (Long) LoginContext.getLoginInfo().get("id");
+        if (!order.getUserId().equals(userId)) {
+            throw new ServiceException("只能操作自己的订单");
+        }
+        //已付款订单的收货地址不允许再改
+        if (!order.getStatus().equals(OrderStatus.UNPAID.getCode())) {
+            throw new ServiceException("只有未付款订单才能选择收货地址");
+        }
+        //地址必须是本人的，收货地址服务里做了校验
+        Result<Shipping> shippingResult = shippingClient.selectById(shippingId);
+        if (shippingResult.getCode() == Result.ERROR || shippingResult.getData() == null) {
+            throw new ServiceException("收货地址不存在");
+        }
+        Order update = new Order();
+        update.setOrderNo(orderNo);
+        update.setShippingId(shippingId);
+        orderMapper.updateById(update);
     }
 
     @Override
@@ -207,6 +246,54 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         IPage<OrderVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         voPage.setRecords(orderVOList);
         return voPage;
+    }
+
+    /**
+     * 秒杀订单落库：订单号幂等 + orders/order_item 本地事务，
+     * 商品快照直接用消息里的秒杀快照（落库不回查商品服务），复用普通订单的延时取消机制
+     */
+    @Transactional
+    @Override
+    public boolean createSeckillOrder(SeckillOrderMessage message) {
+        //1.订单号幂等
+        if (orderMapper.selectById(message.getOrderNo()) != null) {
+            return false;
+        }
+
+        //2.保存订单：orderNo=消息预生成的订单号，payment=秒杀价×数量
+        Order order = new Order();
+        order.setOrderNo(message.getOrderNo());
+        order.setUserId(message.getUserId());
+        order.setStatus(OrderStatus.UNPAID.getCode());//-1:未付款
+        order.setPaymentType(1);//1:微信支付
+        order.setPostage(BigDecimal.ZERO);
+        BigDecimal payment = message.getSeckillPrice().multiply(BigDecimal.valueOf(message.getQuantity()));
+        order.setPayment(payment);
+        orderMapper.insert(order);
+
+        //3.保存订单明细：商品快照来自消息（名称/图片/单价=秒杀价），落库不回查商品服务
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrderNo(message.getOrderNo());
+        orderItem.setUserId(message.getUserId());
+        orderItem.setProductId(message.getProductId());
+        orderItem.setProductName(message.getProductName());
+        orderItem.setProductImage(message.getProductImage());
+        orderItem.setCurrentUnitPrice(message.getSeckillPrice());
+        orderItem.setQuantity(message.getQuantity());
+        orderItem.setTotalPrice(payment);
+        orderItemMapper.insert(orderItem);
+
+        //4.发延时取消消息（复用普通订单机制，超时未支付自动取消；时长与订单页倒计时一致：30分钟）
+        MultiDelayMessage<Long> multiDelayMessage = new MultiDelayMessage<>(order.getOrderNo(), 60000L, 300000L, 600000L, 840000L);
+        Long delay = multiDelayMessage.removeNextDelay();
+        rabbitTemplate.convertAndSend(MqConstant.DELAY_EXCHANGE, MqConstant.DELAY_ORDER_ROUTING_KEY, multiDelayMessage, new MessagePostProcessor() {
+            @Override
+            public Message postProcessMessage(Message message) throws AmqpException {
+                message.getMessageProperties().setDelay(Math.toIntExact(delay));
+                return message;
+            }
+        });
+        return true;
     }
 
     //发货：支付模块还没做，未付款的订单也允许发货，发货后写发货时间
@@ -294,6 +381,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         if (dbOrder.getStatus() != OrderStatus.UNPAID.getCode()) {
             throw new ServiceException("当前订单状态不能支付");
+        }
+        //支付前必须有收货地址（秒杀订单下单时不选地址，支付前需要先选择）
+        if (dbOrder.getShippingId() == null) {
+            throw new ServiceException("请先选择收货地址");
         }
         Order order = new Order();
         order.setOrderNo(orderNo);

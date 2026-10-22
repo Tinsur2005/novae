@@ -16,6 +16,7 @@ import Shipping from '@/views/shipping/Shipping.vue'
 import OrderConfirm from '@/views/order/OrderConfirm.vue'
 import OrderList from '@/views/order/OrderList.vue'
 import OrderDetail from '@/views/order/OrderDetail.vue'
+import Seckill from '@/views/seckill/Seckill.vue'
 
 //创建路由器
 const router = createRouter({
@@ -37,6 +38,7 @@ const router = createRouter({
                 {path: '/order/confirm', component: OrderConfirm},
                 {path: '/order', component: OrderList},
                 {path: '/order/:orderNo', component: OrderDetail},
+                {path: '/seckill', component: Seckill},
                 {path: '/user/profile', component: Profile},
                 {path: '/shipping', component: Shipping}
             ]

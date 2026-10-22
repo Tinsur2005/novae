@@ -34,6 +34,10 @@ spring:
           uri: lb://order-service
           predicates:
             - Path=/order/**
+        - id: seckill-service  #
+          uri: lb://seckill-service
+          predicates:
+            - Path=/activity/**,/activity-product/**,/seckill/**
         - id: cart-service  #
           uri: lb://cart-service
           predicates:

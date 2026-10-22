@@ -12,7 +12,8 @@ public class RabbitMQConfig {
     public MessageConverter jsonToMapMessageConverter() {
         DefaultClassMapper defaultClassMapper = new DefaultClassMapper();
         // 指定反序列化期间要信任的一组包，星号 ( * ) 表示全部信任
-        defaultClassMapper.setTrustedPackages("cn.tinsur.mall.util");
+        //SeckillOrderMessage 在 cn.tinsur.mall.pojo.message（mall-common），需信任全部包
+        defaultClassMapper.setTrustedPackages("*");
         Jackson2JsonMessageConverter jackson2JsonMessageConverter = new Jackson2JsonMessageConverter();
         jackson2JsonMessageConverter.setClassMapper(defaultClassMapper);
         return jackson2JsonMessageConverter;

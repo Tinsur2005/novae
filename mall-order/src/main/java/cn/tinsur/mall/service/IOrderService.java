@@ -1,6 +1,7 @@
 package cn.tinsur.mall.service;
 
 import cn.tinsur.mall.pojo.entity.Order;
+import cn.tinsur.mall.pojo.message.SeckillOrderMessage;
 import cn.tinsur.mall.pojo.query.OrderQuery;
 import cn.tinsur.mall.pojo.vo.OrderVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -24,9 +25,13 @@ public interface IOrderService extends IService<Order> {
 
     OrderVO detail(Long orderNo);
 
+    void updateShipping(Long orderNo, Long shippingId);
+
     IPage<OrderVO> page(OrderQuery orderQuery);
 
     void send(Long orderNo);
+
+    boolean createSeckillOrder(SeckillOrderMessage message);
 
     void confirmReceipt(Long orderNo);
 

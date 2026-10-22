@@ -97,6 +97,14 @@
       </div>
     </div>
 
+    <!-- 限时秒杀入口 -->
+    <div class="seckill-entry" @click="router.push('/seckill')">
+      <van-icon name="clock-o" size="18"/>
+      <span class="seckill-title">限时秒杀</span>
+      <span class="seckill-sub">好物限量抢</span>
+      <van-icon class="seckill-arrow" name="arrow"/>
+    </div>
+
     <!-- 商品两列瀑布流 -->
     <van-list v-model:loading="loading" :finished="finished" finished-text="— 没有更多了 —">
       <div class="product-grid">
@@ -166,6 +174,33 @@
   .tab-item.active {
     color: var(--app-primary);
     font-weight: 700;
+  }
+
+  /* 限时秒杀入口 */
+  .seckill-entry {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 12px 0;
+    padding: 12px 14px;
+    border-radius: var(--app-card-radius);
+    background-color: var(--app-primary);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .seckill-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .seckill-sub {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  .seckill-arrow {
+    margin-left: auto;
   }
 
   /* 商品两列宫格：白底页面，与顶部连成一体 */

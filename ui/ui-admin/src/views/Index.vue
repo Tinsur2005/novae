@@ -47,6 +47,12 @@
           </el-icon>
           <template #title>订单管理</template>
         </el-menu-item>
+        <el-menu-item index="/activity">
+          <el-icon>
+            <AlarmClock/>
+          </el-icon>
+          <template #title>秒杀活动</template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -137,7 +143,7 @@ const adminStore = useAdminInfoStore()
 const isCollapse = ref(false)
 
 // 面包屑标题
-const titleMap = {'/admin': '管理员管理', '/category': '分类管理', '/product': '商品管理', '/user': '用户管理', '/order': '订单管理'}
+const titleMap = {'/admin': '管理员管理', '/category': '分类管理', '/product': '商品管理', '/user': '用户管理', '/order': '订单管理', '/activity': '秒杀活动'}
 const currentTitle = computed(() => titleMap[route.path] || '首页')
 
 // 加载当前登录管理员信息

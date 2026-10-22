@@ -9,6 +9,7 @@ import Category from '@/views/Category.vue'
 import Product from '@/views/Product.vue'
 import User from '@/views/user/User.vue'
 import Order from '@/views/order/Order.vue'
+import Activity from '@/views/seckill/Activity.vue'
 
 
 
@@ -23,7 +24,8 @@ const router = createRouter({
                 {path: '/category', component: Category},
                 {path: '/product', component: Product},
                 {path: '/user', component: User},
-                {path: '/order', component: Order}
+                {path: '/order', component: Order},
+                {path: '/activity', component: Activity}
             ]
         }
     ]

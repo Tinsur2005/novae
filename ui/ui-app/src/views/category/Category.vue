@@ -152,8 +152,8 @@
     text-align: center;
     font-size: 16px;
     font-weight: 600;
-    color: #fff;
-    background: var(--app-primary);
+    color: var(--app-primary);
+    background: #fff;
   }
 
   .cat-body {
