@@ -47,16 +47,6 @@
           </el-icon>
           <template #title>订单管理</template>
         </el-menu-item>
-        <!-- 以下菜单为后续模块预留 -->
-        <el-menu-item index="/stat" disabled>
-          <el-icon>
-            <DataAnalysis/>
-          </el-icon>
-          <template #title>
-            数据统计
-            <el-tag size="small" type="info" effect="dark" class="menu-tag">开发中</el-tag>
-          </template>
-        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -147,7 +137,7 @@ const adminStore = useAdminInfoStore()
 const isCollapse = ref(false)
 
 // 面包屑标题
-const titleMap = {'/admin': '管理员管理', '/category': '分类管理', '/product': '商品管理', '/user': '用户管理', '/order': '订单管理', '/stat': '数据统计'}
+const titleMap = {'/admin': '管理员管理', '/category': '分类管理', '/product': '商品管理', '/user': '用户管理', '/order': '订单管理'}
 const currentTitle = computed(() => titleMap[route.path] || '首页')
 
 // 加载当前登录管理员信息
@@ -275,10 +265,6 @@ const submitPassword = () => {
 
 .layout-menu {
   border-right: none;
-}
-
-.menu-tag {
-  margin-left: 6px;
 }
 
 .layout-header {

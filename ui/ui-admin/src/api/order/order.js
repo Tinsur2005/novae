@@ -13,6 +13,10 @@ const orderApi = {
     close(orderNo) {
         return request.put(`/order/${orderNo}/close`)
     },
+    //后台修改订单（实付金额/运费/支付方式/状态）
+    update(order) {
+        return request.put(`/order/${order.orderNo}`, order)
+    },
     //删除订单（逻辑删除）
     deleteById(orderNo) {
         return request.delete(`/order/${orderNo}`);

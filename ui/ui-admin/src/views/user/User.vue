@@ -29,6 +29,7 @@
 
     <!-- 操作栏 -->
     <div class="toolbar">
+      <el-button type="primary" :icon="'Plus'" @click="handleAdd">新增用户</el-button>
       <el-button type="danger" :icon="'Delete'" :disabled="selection.length === 0" @click="handleDeleteBatch">
         批量删除
       </el-button>
@@ -60,12 +61,43 @@
       <el-table-column label="注册时间" width="170" align="center">
         <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="80" align="center" fixed="right">
+      <el-table-column label="操作" width="160" align="center" fixed="right">
         <template #default="{ row }">
+          <el-button type="primary" link :icon="'Edit'" @click="handleEdit(row)">编辑</el-button>
           <el-button type="danger" link :icon="'Delete'" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 新增/编辑用户弹层 -->
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '新增用户'" width="520px" destroy-on-close>
+      <el-form ref="formRef" :model="userForm" :rules="rules" label-width="80px">
+        <el-form-item label="用户名" prop="name">
+          <el-input v-model="userForm.name" placeholder="请输入用户名" clearable/>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="userForm.password" type="password" show-password
+                    :placeholder="isEdit ? '不修改请留空' : '请输入密码'" clearable/>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="userForm.email" placeholder="请输入邮箱" clearable/>
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="userForm.phone" placeholder="请输入手机号" maxlength="11" clearable/>
+        </el-form-item>
+        <el-form-item label="头像URL" prop="avatar">
+          <el-input v-model="userForm.avatar" placeholder="请输入头像图片地址（选填）" clearable/>
+        </el-form-item>
+        <el-form-item v-if="isEdit" label="状态">
+          <el-switch v-model="userForm.status" :active-value="1" :inactive-value="0"
+                     active-text="启用" inactive-text="禁用"/>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 分页 -->
     <el-pagination
@@ -82,7 +114,7 @@
 </template>
 
 <script setup>
-import {onMounted, reactive, ref} from 'vue'
+import {computed, onMounted, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import dayjs from 'dayjs'
 import userApi from '@/api/user/user.js'
@@ -153,6 +185,70 @@ const handleSizeChange = () => {
 
 const handleCurrentChange = () => {
   loadData()
+}
+
+// ---------------- 新增/编辑 ----------------
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+const submitting = ref(false)
+const formRef = ref(null)
+const userForm = reactive({
+  id: null,
+  name: '',
+  password: '',
+  email: '',
+  phone: '',
+  avatar: '',
+  status: 1
+})
+
+//校验规则：新增时密码必填，编辑时留空表示不改密码
+const rules = computed(() => ({
+  name: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: isEdit.value ? [] : [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
+  phone: [{ pattern: /^1\d{10}$/, message: '手机号格式不正确', trigger: 'blur' }]
+}))
+
+const handleAdd = () => {
+  isEdit.value = false
+  Object.assign(userForm, {id: null, name: '', password: '', email: '', phone: '', avatar: '', status: 1})
+  dialogVisible.value = true
+}
+
+const handleEdit = (row) => {
+  isEdit.value = true
+  Object.assign(userForm, {
+    id: row.id,
+    name: row.name || '',
+    password: '',
+    email: row.email || '',
+    phone: row.phone || '',
+    avatar: row.avatar || '',
+    status: row.status
+  })
+  dialogVisible.value = true
+}
+
+const handleSubmit = () => {
+  formRef.value.validate(async (valid) => {
+    if (!valid) return
+    submitting.value = true
+    try {
+      const res = isEdit.value ? await userApi.update(userForm) : await userApi.add(userForm)
+      if (res.code === 1) {
+        ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
+        dialogVisible.value = false
+        loadData()
+      } else {
+        ElMessage.error(res.msg || (isEdit.value ? '编辑失败' : '新增失败'))
+      }
+    } catch (e) {
+      /* 拦截器已统一提示 */
+    } finally {
+      submitting.value = false
+    }
+  })
 }
 
 // ---------------- 状态开关 ----------------

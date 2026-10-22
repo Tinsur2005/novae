@@ -94,7 +94,32 @@ public class UserController {
     @GetMapping
     public Result<IPage<User>> list(UserQuery userQuery) {
         IPage<User> page = userService.list(userQuery);
+        //密码不回传给前台
+        page.getRecords().forEach(user -> user.setPassword(null));
         return Result.ok(page);
+    }
+
+    /**
+     * 后台新增用户（复用注册逻辑：用户名查重 + 密码加密，默认正常状态）
+     * POST /user
+     */
+    @MyLog(module = "用户模块：新增")
+    @PostMapping
+    public Result add(@RequestBody User user) {
+        userService.register(user);
+        return Result.ok("新增用户成功");
+    }
+
+    /**
+     * 后台编辑用户（密码留空表示不修改）
+     * PUT /user/5
+     */
+    @MyLog(module = "用户模块：编辑")
+    @PutMapping("/{id}")
+    public Result updateByAdmin(@RequestBody User user, @PathVariable Long id) {
+        user.setId(id);
+        userService.updateByAdmin(user);
+        return Result.ok("编辑用户成功");
     }
 
     /**

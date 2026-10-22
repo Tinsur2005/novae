@@ -28,7 +28,11 @@ public interface IOrderService extends IService<Order> {
 
     void send(Long orderNo);
 
+    void confirmReceipt(Long orderNo);
+
     void close(Long orderNo);
+
+    void updateByAdmin(Order order);
 
     void deleteById(Long orderNo);
 

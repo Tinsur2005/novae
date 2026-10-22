@@ -58,4 +58,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setStatus(1);
         userMapper.insert(user);
     }
+
+    /**
+     * 后台编辑用户：用户名查重，密码填写了才更新，其余字段按传参更新
+     */
+    @Override
+    public void updateByAdmin(User user) {
+        if (user.getId() == null) {
+            throw new ServiceException("用户ID不能为空");
+        }
+        User dbUser = userMapper.selectById(user.getId());
+        if (dbUser == null) {
+            throw new ServiceException("用户不存在");
+        }
+        //用户名有改动才查重
+        if (!ObjectUtils.isEmpty(user.getName()) && !user.getName().equals(dbUser.getName())) {
+            User sameName = userMapper.selectOne(new QueryWrapper<User>().eq("name", user.getName()));
+            if (sameName != null) {
+                throw new ServiceException("用户名已存在");
+            }
+        }
+        //密码填写了就加密更新，没填不改动密码
+        if (!ObjectUtils.isEmpty(user.getPassword())) {
+            user.setPassword(PasswordUtil.hash(user.getPassword()));
+        } else {
+            user.setPassword(null);
+        }
+        userMapper.updateById(user);
+    }
 }

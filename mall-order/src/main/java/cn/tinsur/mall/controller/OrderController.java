@@ -91,6 +91,17 @@ public class OrderController {
     }
 
     /**
+     * 确认收货，已发货订单确认后变为交易成功
+     * PUT /order/123456/confirm
+     */
+    @MyLog(module = "订单模块：确认收货")
+    @PutMapping("/{orderNo}/confirm")
+    public Result confirm(@PathVariable Long orderNo) {
+        orderService.confirmReceipt(orderNo);
+        return Result.ok("确认收货成功");
+    }
+
+    /**
      * 关闭订单，下单时扣掉的库存会加回去
      * PUT /order/123456/close
      */
@@ -99,6 +110,18 @@ public class OrderController {
     public Result close(@PathVariable Long orderNo) {
         orderService.close(orderNo);
         return Result.ok("关闭成功");
+    }
+
+    /**
+     * 后台修改订单（实付金额/运费/支付方式/订单状态）
+     * PUT /order/123456
+     */
+    @MyLog(module = "订单模块：编辑")
+    @PutMapping("/{orderNo}")
+    public Result updateByAdmin(@RequestBody Order order, @PathVariable Long orderNo) {
+        order.setOrderNo(orderNo);
+        orderService.updateByAdmin(order);
+        return Result.ok("修改订单成功");
     }
 
     /**

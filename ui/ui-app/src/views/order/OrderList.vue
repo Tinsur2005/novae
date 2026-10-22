@@ -1,7 +1,7 @@
 <script setup>
   import {ref, computed, onMounted} from 'vue'
   import {useRoute, useRouter} from 'vue-router'
-  import {showToast, showSuccessToast} from 'vant'
+  import {showToast, showSuccessToast, showConfirmDialog} from 'vant'
   import orderApi from '@/api/order/order.js'
   import PageHeader from '@/components/PageHeader.vue'
   import {formatImage, formatPrice} from '@/utils/format.js'
@@ -86,6 +86,26 @@
     })
   }
 
+  //确认收货：已发货订单确认后变为交易成功
+  const confirmReceipt = (order) => {
+    showConfirmDialog({
+      title: '提示',
+      message: '确认已收到商品吗？确认后订单将完成交易',
+      confirmButtonText: '确认收货',
+      cancelButtonText: '取消'
+    }).then(() => {
+      orderApi.confirm(order.orderNo).then(result => {
+        if (result.code === 1) {
+          showSuccessToast(result.msg || '确认收货成功')
+          order.status = 3
+        } else {
+          showToast(result.msg || '确认收货失败')
+        }
+      })
+    }).catch(() => {
+    })
+  }
+
   const toHome = () => router.push('/home')
 
   //点击订单卡片进入订单详情
@@ -147,6 +167,10 @@
           <!-- 未付款订单显示支付按钮 -->
           <div v-if="order.status === -1" class="order-actions">
             <van-button round size="small" class="pay-button" @click.stop="payOrder(order)">立即支付</van-button>
+          </div>
+          <!-- 已发货订单显示确认收货按钮 -->
+          <div v-if="order.status === 2" class="order-actions">
+            <van-button round size="small" class="pay-button" @click.stop="confirmReceipt(order)">确认收货</van-button>
           </div>
         </div>
       </div>

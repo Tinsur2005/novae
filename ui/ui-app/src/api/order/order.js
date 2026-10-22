@@ -16,6 +16,10 @@ const orderApi = {
     //虚拟支付，支付后订单变为待发货
     pay(orderNo) {
         return request.put("/order/" + orderNo + "/pay")
+    },
+    //确认收货，已发货订单确认后变为交易成功
+    confirm(orderNo) {
+        return request.put("/order/" + orderNo + "/confirm")
     }
 }
 

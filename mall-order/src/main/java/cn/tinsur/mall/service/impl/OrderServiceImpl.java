@@ -227,6 +227,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderMapper.updateById(order);
     }
 
+    //确认收货：已发货的订单确认后变为交易成功
+    @Override
+    public void confirmReceipt(Long orderNo) {
+        Order dbOrder = orderMapper.selectById(orderNo);
+        if (dbOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        //只能确认自己的订单
+        Long userId = (Long) LoginContext.getLoginInfo().get("id");
+        if (!dbOrder.getUserId().equals(userId)) {
+            throw new ServiceException("只能确认自己的订单");
+        }
+        if (dbOrder.getStatus() != OrderStatus.SENT.getCode()) {
+            throw new ServiceException("当前订单状态不能确认收货");
+        }
+        Order order = new Order();
+        order.setOrderNo(orderNo);
+        order.setStatus(OrderStatus.SUCCESS.getCode());
+        order.setEndTime(new Date());
+        orderMapper.updateById(order);
+    }
+
     //关闭订单：下单时已经扣过库存了，关闭时要把库存加回去
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
@@ -313,5 +335,49 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         LambdaQueryWrapper<OrderItem> itemQueryWrapper = new LambdaQueryWrapper<>();
         itemQueryWrapper.eq(OrderItem::getOrderNo, orderNo);
         orderItemMapper.delete(itemQueryWrapper);
+    }
+
+    //后台修改订单：只允许改实付金额、运费、支付方式、订单状态
+    @Override
+    public void updateByAdmin(Order order) {
+        Order dbOrder = orderMapper.selectById(order.getOrderNo());
+        if (dbOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        //只拷贝允许修改的字段，避免改动用户、下单时间等数据
+        Order update = new Order();
+        update.setOrderNo(order.getOrderNo());
+        if (order.getPayment() != null) {
+            if (order.getPayment().compareTo(BigDecimal.ZERO) < 0) {
+                throw new ServiceException("实付金额不能为负数");
+            }
+            update.setPayment(order.getPayment());
+        }
+        if (order.getPostage() != null) {
+            if (order.getPostage().compareTo(BigDecimal.ZERO) < 0) {
+                throw new ServiceException("运费不能为负数");
+            }
+            update.setPostage(order.getPostage());
+        }
+        if (order.getPaymentType() != null) {
+            if (order.getPaymentType() < 1 || order.getPaymentType() > 3) {
+                throw new ServiceException("支付方式不合法");
+            }
+            update.setPaymentType(order.getPaymentType());
+        }
+        if (order.getStatus() != null) {
+            boolean valid = false;
+            for (OrderStatus status : OrderStatus.values()) {
+                if (status.getCode() == order.getStatus()) {
+                    valid = true;
+                    break;
+                }
+            }
+            if (!valid) {
+                throw new ServiceException("订单状态不合法");
+            }
+            update.setStatus(order.getStatus());
+        }
+        orderMapper.updateById(update);
     }
 }

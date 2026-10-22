@@ -64,8 +64,9 @@
       <el-table-column label="发货时间" width="170" align="center">
         <template #default="{ row }">{{ formatTime(row.sendTime) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="170" align="center" fixed="right">
+      <el-table-column label="操作" width="320" align="center" fixed="right">
         <template #default="{ row }">
+          <el-button type="primary" link :icon="'Edit'" @click="handleEdit(row)">编辑</el-button>
           <el-button type="primary" link :icon="'Van'" :disabled="!canSend(row)" @click="handleSend(row)">发货</el-button>
           <el-button type="warning" link :icon="'CircleClose'" :disabled="!canClose(row)" @click="handleClose(row)">
             关闭
@@ -118,6 +119,37 @@
         <template #default="{ row }">{{ formatPrice(row.totalPrice) }}</template>
       </el-table-column>
     </el-table>
+  </el-dialog>
+
+  <!-- 编辑订单弹窗 -->
+  <el-dialog v-model="editVisible" title="编辑订单" width="520px" destroy-on-close>
+    <el-form :model="editForm" label-width="90px">
+      <el-form-item label="订单号">
+        <el-input :model-value="editForm.orderNo" disabled/>
+      </el-form-item>
+      <el-form-item label="实付金额">
+        <el-input-number v-model="editForm.payment" :min="0" :precision="2" :step="1" controls-position="right"/>
+        <span class="form-unit">元</span>
+      </el-form-item>
+      <el-form-item label="运费">
+        <el-input-number v-model="editForm.postage" :min="0" :precision="2" :step="1" controls-position="right"/>
+        <span class="form-unit">元</span>
+      </el-form-item>
+      <el-form-item label="支付方式">
+        <el-select v-model="editForm.paymentType" style="width: 180px">
+          <el-option v-for="(text, key) in paymentTypeMap" :key="key" :label="text" :value="Number(key)"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="订单状态">
+        <el-select v-model="editForm.status" style="width: 180px">
+          <el-option v-for="(item, key) in statusMap" :key="key" :label="item.text" :value="Number(key)"/>
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="editVisible = false">取消</el-button>
+      <el-button type="primary" :loading="submitting" @click="handleEditSubmit">确定</el-button>
+    </template>
   </el-dialog>
 </template>
 
@@ -219,6 +251,50 @@ const handleDetail = (row) => {
   detailVisible.value = true
 }
 
+// ---------------- 编辑订单 ----------------
+const editVisible = ref(false)
+const submitting = ref(false)
+const editForm = reactive({
+  orderNo: null,
+  payment: 0,
+  postage: 0,
+  paymentType: 1,
+  status: null
+})
+
+const handleEdit = (row) => {
+  editForm.orderNo = row.orderNo
+  editForm.payment = Number(row.payment || 0)
+  editForm.postage = Number(row.postage || 0)
+  editForm.paymentType = row.paymentType
+  editForm.status = row.status
+  editVisible.value = true
+}
+
+const handleEditSubmit = async () => {
+  submitting.value = true
+  try {
+    const res = await orderApi.update({
+      orderNo: editForm.orderNo,
+      payment: editForm.payment,
+      postage: editForm.postage,
+      paymentType: editForm.paymentType,
+      status: editForm.status
+    })
+    if (res.code === 1) {
+      ElMessage.success('修改成功')
+      editVisible.value = false
+      loadData()
+    } else {
+      ElMessage.error(res.msg || '修改失败')
+    }
+  } catch (e) {
+    /* 拦截器已统一提示 */
+  } finally {
+    submitting.value = false
+  }
+}
+
 // ---------------- 发货 / 关闭 / 删除 ----------------
 // 待付款(-1)和待发货(1)的订单都可以发货
 const canSend = (row) => row.status === -1 || row.status === 1
@@ -289,5 +365,10 @@ const handleDelete = (row) => {
 .detail-table .item-image {
   width: 56px;
   height: 56px;
+}
+
+.form-unit {
+  margin-left: 8px;
+  color: #909399;
 }
 </style>

@@ -4,6 +4,14 @@ const userApi = {
     list(userQuery) {
         return request.get("/user", {params: userQuery});
     },
+    //后台新增用户
+    add(user) {
+        return request.post("/user", user);
+    },
+    //后台编辑用户
+    update(user) {
+        return request.put(`/user/${user.id}`, user);
+    },
     //修改用户状态(启用/禁用)
     updateStatus(id, status) {
         return request.put(`/user/${id}/status/${status}`)

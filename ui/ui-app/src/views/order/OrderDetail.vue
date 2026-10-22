@@ -1,7 +1,7 @@
 <script setup>
   import {ref, computed, onMounted} from 'vue'
   import {useRoute, useRouter} from 'vue-router'
-  import {showToast, showSuccessToast} from 'vant'
+  import {showToast, showSuccessToast, showConfirmDialog} from 'vant'
   import orderApi from '@/api/order/order.js'
   import PageHeader from '@/components/PageHeader.vue'
   import {formatImage, formatPrice} from '@/utils/format.js'
@@ -61,6 +61,26 @@
       } else {
         showToast(result.msg || '支付失败')
       }
+    })
+  }
+
+  //确认收货：已发货订单确认后变为交易成功
+  const confirmReceipt = () => {
+    showConfirmDialog({
+      title: '提示',
+      message: '确认已收到商品吗？确认后订单将完成交易',
+      confirmButtonText: '确认收货',
+      cancelButtonText: '取消'
+    }).then(() => {
+      orderApi.confirm(order.value.orderNo).then(result => {
+        if (result.code === 1) {
+          showSuccessToast(result.msg || '确认收货成功')
+          order.value.status = 3
+        } else {
+          showToast(result.msg || '确认收货失败')
+        }
+      })
+    }).catch(() => {
     })
   }
 
@@ -143,6 +163,10 @@
           <span class="info-label">发货时间</span>
           <span class="info-value">{{ order.sendTime }}</span>
         </div>
+        <div v-if="order.endTime" class="info-row">
+          <span class="info-label">交易完成时间</span>
+          <span class="info-value">{{ order.endTime }}</span>
+        </div>
         <div v-if="order.closeTime" class="info-row">
           <span class="info-label">关闭时间</span>
           <span class="info-value">{{ order.closeTime }}</span>
@@ -152,6 +176,9 @@
       <!-- 未付款订单底部支付栏 -->
       <van-submit-bar v-if="order.status === -1" class="app-fixed" :price="Math.round(order.payment * 100)"
                       label="实付：" button-text="立即支付" @submit="payOrder"/>
+      <!-- 已发货订单底部确认收货栏 -->
+      <van-submit-bar v-else-if="order.status === 2" class="app-fixed" button-text="确认收货"
+                      @submit="confirmReceipt"/>
     </template>
   </div>
 </template>

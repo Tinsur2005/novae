@@ -18,4 +18,6 @@ public interface IUserService extends IService<User> {
     IPage<User> list(UserQuery userQuery);
 
     void register(User user);
+
+    void updateByAdmin(User user);
 }
